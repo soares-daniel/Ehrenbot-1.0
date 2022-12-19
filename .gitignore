@@ -1,0 +1,21 @@
+# Environment
+.venv
+.vscode
+.env
+.env.debug
+
+# Cache files
+__pycache__
+__lang_cache__
+ehrenbot/__pycache__
+ehrenbot/cogs/__pycache__
+ehrenbot/utils/__pycache__
+
+# Logs
+logs
+
+# Database
+*.content
+tmp
+
+# Test
