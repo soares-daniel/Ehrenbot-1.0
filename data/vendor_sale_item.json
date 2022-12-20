@@ -1,0 +1,28 @@
+{
+    "Weapons": {
+        "category_hash": 1,
+        "definition": {},
+        "item_hash" : 0,
+        "costs": {},
+        "stats": {},
+        "sockets": {
+            "Intrinsic": {},
+            "Barrel": {},
+            "Magazine": {},
+            "Trait": {},
+            "Stock": {},
+            "Origin Trait": {}
+        }
+    },
+    "Armor": {
+        "category_hash": 20,
+        "definition": {},
+        "item_hash" : 0,
+        "costs": {},
+        "class": "",
+        "stats": {},
+        "sockets": {
+            "Intrinsic": {}
+        }
+    }
+}

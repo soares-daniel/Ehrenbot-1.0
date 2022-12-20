@@ -1,0 +1,15 @@
+{
+    "9": ["Impact", "Range", "Stability", "Handling", "Reload Speed", "Aim Assistance", "Airborne Effectiveness", "Zoom", "Recoil Direction", "Charge Time", "Magazine"],
+
+    "3871742104": ["Impact", "Range", "Shield Duration", "Handling", "Reload Speed", "Aim Assistance", "Airborne Effectiveness", "Charge Time", "Magazine"],
+
+    "153950757": ["Blast Radius", "Velocity", "Stability", "Handling", "Reload Speed", "Aim Assistance", "Airborne Effectiveness", "Zoom", "Recoil Direction", "Rounds Per Minute", "Magazine"],
+
+    "1504945536": ["Impact", "Range", "Stability", "Handling", "Reload Speed", "Aim Assistance", "Airborne Effectiveness", "Zoom", "Recoil Direction", "Charge Time", "Magazine"],
+
+    "13": ["Blast Radius", "Velocity", "Stability", "Handling", "Reload Speed", "Aim Assistance", "Airborne Effectiveness", "Zoom", "Recoil Direction", "Rounds Per Minute", "Magazine"],
+
+    "54": ["Impact", "Swing Speed", "Charge Rate", "Guard Resistance", "Guard Efficiency", "Guard Endurance", "Charge Time", "Ammo Capacity"],
+
+    "Default": ["Impact", "Range", "Stability", "Handling", "Reload Speed", "Aim Assistance", "Airborne Effectiveness", "Zoom", "Recoil Direction", "Rounds Per Minute", "Magazine"]
+}

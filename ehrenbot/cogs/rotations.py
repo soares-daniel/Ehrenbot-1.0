@@ -1,11 +1,12 @@
 # pylint: disable=E0211,E1121,C0206,E1123
+import aiohttp
 import logging
 from datetime import date, time, timezone
 
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_rotations import loop_check, sort_sales, vendor_sales
+from ehrenbot.utils.utils_rotations import loop_check, sort_sales, fetch_vendor_sales, xur_embed
 
 
 class Rotations(commands.Cog):
@@ -23,26 +24,33 @@ class Rotations(commands.Cog):
     @commands.slash_command(name="vendor_test", description="Test vendor command")
     async def vendor_test(self, ctx: commands.Context):
         await ctx.respond("Checking for vendor data...")
-        last_message_id = ctx.channel.last_message_id
 
         vendor_hash = 2190858386
-        if not await vendor_sales(bot=self.bot, logger=self.logger, vendor_hash=vendor_hash):
-            await ctx.respond("ERROR")
+        if not await fetch_vendor_sales(bot=self.bot, logger=self.logger, vendor_hash=vendor_hash):
+            await ctx.send("ERROR")
             return
-        destiny_rotation = self.bot.database["destiny_rotation"]
-        sorted_items = destiny_rotation.find_one({"vendor_hash": vendor_hash}).get("sorted_sales")
-        if not sorted_items:
-            await sort_sales(bot=self.bot, logger=self.logger, vendor_hash=vendor_hash)
-        for category in sorted_items:
-            display_items = []
-            for item in sorted_items[category]:
-                display_items.append(item["displayProperties"]["name"])
-            message = await ctx.channel.fetch_message(last_message_id)
-            content = message.content
-            if content == "Checking for vendor data...":
-                await message.edit(content=f"\u200b{category} {display_items}\u200b")
-            else:
-                await message.edit(content=f"\u200b{content}\n{category} {display_items}\u200b")
+        await ctx.send("SUCCESS")
+
+    @commands.slash_command(name="embed_test", description="Test embed command")
+    async def embed_test(self, ctx: commands.Context):
+        await ctx.respond("Checking for vendor data...")
+        embed = await xur_embed(bot=self.bot)
+        await ctx.send(embed=embed)
+
+
+    @commands.slash_command(name="emoji", description="Get Xur's inventory")
+    async def test_emoji(self, ctx: commands.Context):
+        manifest = self.bot.mongo_client["d2manifest_en"]
+        destiny_stat_definition = manifest["DestinyStatDefinition"]
+        stat_hash = 392767087
+        stat = destiny_stat_definition.find_one({"hash": stat_hash})
+        icon_url=stat["displayProperties"]["icon"]
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://www.bungie.net" + icon_url) as resp:
+                emoji_img = await resp.read()
+        emoji = await ctx.guild.create_custom_emoji(name="test", image=emoji_img)
+        await ctx.respond(emoji)
+        await ctx.guild.delete_emoji(emoji)
 
     @tasks.loop(time=get_reset_time())
     async def daily_rotation(self):
