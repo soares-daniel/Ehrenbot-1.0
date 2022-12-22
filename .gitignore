@@ -10,6 +10,7 @@ __lang_cache__
 ehrenbot/__pycache__
 ehrenbot/cogs/__pycache__
 ehrenbot/utils/__pycache__
+.DS_Store
 
 # Logs
 logs
@@ -18,4 +19,3 @@ logs
 *.content
 tmp
 
-# Test

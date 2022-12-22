@@ -1,12 +1,13 @@
 # pylint: disable=E0211,E1121,C0206,E1123
-import aiohttp
 import logging
 from datetime import date, time, timezone
 
+import aiohttp
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_rotations import loop_check, sort_sales, fetch_vendor_sales, xur_embed
+from ehrenbot.utils.utils_rotations import (fetch_vendor_sales, loop_check,
+                                            sort_sales, xur_embed)
 
 
 class Rotations(commands.Cog):
