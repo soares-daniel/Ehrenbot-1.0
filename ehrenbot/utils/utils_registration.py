@@ -14,11 +14,11 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
     profile_collection = bot.database["destiny_profiles"]
     token = token_collection.find_one({"discord_id": discord_id})["token"]
     if not token:
-        bot.logger.error(f"Could not find token for {discord_id}")
+        bot.logger.error("Could not find token for %d", discord_id)
         return False
     profile = profile_collection.find_one({"discord_id": discord_id})["profile"]
     if not profile:
-        bot.logger.error(f"Could not find profile for {discord_id}, creating new profile...")
+        bot.logger.error("Could not find profile for %d, creating new profile...", discord_id)
         await setup_profile(bot, discord_id, token["membership_id"])
 
     try:
@@ -78,9 +78,9 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
 
         profile_collection.update_one({"discord_id": discord_id}, {"$set": {"profile": profile}})
         bungie_name = profile["unique_name"]
-        bot.logger.info(f"{bungie_name} has been updated successfully!")
+        bot.logger.info("%s has been updated successfully!", bungie_name)
         return True
 
     except Exception as ex:
-        bot.logger.error(f"Could not update profile for {discord_id}: {ex}")
+        bot.logger.error("Could not update profile for %d: %s", discord_id, ex)
         return False

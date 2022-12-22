@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import json
+from datetime import timezone
 from logging import Logger
 from typing import Union
 
@@ -11,27 +12,6 @@ from pymongo.collection import Collection
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.exceptions import (BungieMaintenance,
                                        DestinyVendorNotFound, NoBungieResponse)
-
-
-async def xur_embed(bot: Ehrenbot) -> Embed:
-    rotation_collection = bot.database["destiny_rotation"]
-    vendor = rotation_collection.find_one({"vendor_hash": 2190858386})
-    if not vendor["sales"]:
-        raise DestinyVendorNotFound("Xur")
-    sorted_sales = vendor["sorted_sales"]
-    description = vendor["vendor"]["displayProperties"]["description"]
-    embed = Embed(title="Xûr, Agent of the Nine", description=f"\u200b{description}")
-    icon_url = vendor["vendor"]["displayProperties"]["icon"]
-    embed.set_thumbnail(url=f"https://www.bungie.net/{icon_url}")
-    for category in sorted_sales:
-        display_items = ""
-        for item in sorted_sales[category]:
-            display_items += f"{item['displayProperties']['name']}\n"
-        if category in ["Exotic Armor", "Exotic Weapon", "Warlock", "Titan", "Hunter"]:
-            embed.add_field(name=category, value=f"\u200b{display_items}\u200b", inline=True)
-        else:
-            embed.add_field(name=category, value=f"\u200b{display_items}\u200b", inline=False)
-    return embed
 
 
 async def check_vendors(bot: Ehrenbot) -> str:
@@ -98,14 +78,14 @@ async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
 
 async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
     try:
-        current_date = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+        current_date = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")
         destiny_rotation = bot.database["destiny_rotation"]
-        if destiny_rotation.find_one({"vendor_hash": vendor_hash}):
-            date_str = destiny_rotation.find_one({"vendor_hash": vendor_hash})["date"]
+        if entry := destiny_rotation.find_one({"vendor_hash": vendor_hash}):
+            date_str = entry["date"]
             if date_str == current_date:
                 logger.info("Vendor rotation already in database")
                 return True
-        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"armor": [], "weapons": []}})
+        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"armor": [], "weapons": []}}, upsert=True)
         data = await get_vendor_data(bot=bot, vendor_hash=vendor_hash)
 
         modified_data = {"sales": {}, "stats": {}, "sockets": {}}
@@ -124,13 +104,13 @@ async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) ->
         logger.error("Bungie API is in maintenance mode")
         return False
     except DestinyVendorNotFound:
-        logger.error("Vendor not found")
+        logger.warning("Vendor %d not found", vendor_hash)
         return False
     except Exception as ex:
-        logger.error(f"Error: {ex}")
+        logger.error("Error: %s", ex)
         return False
     else:
-        logger.info(f"{vendor_hash} sales modified, processing...")
+        logger.info("%d sales modified, processing...", vendor_hash)
         return await process_vendor_sales(bot=bot, logger=logger, vendor_hash=vendor_hash, data=modified_data)
 
 # ! armor stats are not updating
@@ -161,7 +141,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
             item_sockets = sockets_data[item]["sockets"]
             item_template = templates[item_type]
 
-            logger.debug(f"Processing item {item_hash}")
+            logger.debug("Processing item %d", item_hash)
             item_template["definition"] = item_definition
             item_template["definition"]["itemHash"] = item_hash
             item_template["costs"]  = item_costs
@@ -226,12 +206,12 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
                 weapons[item_name] = item_template
 
     except Exception as ex:
-        logger.exception(f"Error processing vendor sales: {ex}")
+        logger.exception("Error processing vendor sales: %s", ex)
         return False
     else:
         destiny_rotation = bot.database["destiny_rotation"]
         destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                            {"$set": {"armor": armor, "weapons": weapons, "date": datetime.utcnow().date()}},
+                            {"$set": {"armor": armor, "weapons": weapons, "date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
                             upsert=True)
         logger.info("Vendor sales processed")
         return True
@@ -269,9 +249,9 @@ async def sort_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
                             sorted_items[key].append(item)
         destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"sorted_sales": sorted_items}}, upsert=True)
     except Exception as ex:
-        logger.exception(f"Error sorting sales: {ex}")
+        logger.exception("Error sorting sales: %s", ex)
     else:
-        logger.info(f"{vendor_hash} sales sorted")
+        logger.info("%d sales sorted", vendor_hash)
         return True
 
 async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
@@ -281,9 +261,9 @@ async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
         destiny_rotation.update_one({"vendor_hash": vendor_hash},
                                     {"$set": {"vendor": vendor}}, upsert=True)
     except Exception as ex:
-        logger.exception(f"Error getting vendor info: {ex}")
+        logger.exception("Error getting vendor info: %s", ex)
     else:
-        logger.info(f"{vendor_hash} info updated")
+        logger.info("%d info updated", vendor_hash)
         return True
 
 async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int, collection: Collection) -> Union[Emoji, None]:
@@ -296,8 +276,49 @@ async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
                 data = await resp.read()
                 emoji = await bot.get_guild(bot.GUILD_ID).create_custom_emoji(name=str(hash), image=data)
     except aiohttp.ClientError as ex:
-        logger.error(f"{ex}")
+        logger.error("%s", ex)
         return None
     else:
-        logger.info(f"Emoji created for {item_hash}")
+        logger.info("Emoji created for %d", item_hash)
         return emoji
+
+async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> Embed:
+    match vendor_hash:
+        case 2190858386:
+            embed = await xur_embed(bot)
+        case 672118013:
+            embed = await banshee_embed(bot)
+        case 350061650:
+            embed = await ada_embed(bot)
+        case default:
+            embed = Embed(title="Vendor", description="Vendor not found")
+    current_time = datetime.datetime.now(timezone.utc)
+    embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    return embed
+
+async def xur_embed(bot: Ehrenbot) -> Embed:
+    return Embed(title="Xûr, Agent of the Nine", description="Xûr is currently not in the tower")
+    rotation_collection = bot.database["destiny_rotation"]
+    vendor = rotation_collection.find_one({"vendor_hash": 2190858386})
+    if not vendor["sales"]:
+        raise DestinyVendorNotFound("Xur")
+    sorted_sales = vendor["sorted_sales"]
+    description = vendor["vendor"]["displayProperties"]["description"]
+    embed = Embed(title="Xûr, Agent of the Nine", description=f"\u200b{description}")
+    icon_url = vendor["vendor"]["displayProperties"]["icon"]
+    embed.set_thumbnail(url=f"https://www.bungie.net/{icon_url}")
+    for category in sorted_sales:
+        display_items = ""
+        for item in sorted_sales[category]:
+            display_items += f"{item['displayProperties']['name']}\n"
+        if category in ["Exotic Armor", "Exotic Weapon", "Warlock", "Titan", "Hunter"]:
+            embed.add_field(name=category, value=f"\u200b{display_items}\u200b", inline=True)
+        else:
+            embed.add_field(name=category, value=f"\u200b{display_items}\u200b", inline=False)
+    return embed
+
+async def banshee_embed(bot: Ehrenbot) -> Embed:
+    return Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.")
+
+async def ada_embed(bot: Ehrenbot) -> Embed:
+    return Embed(title="Ada-1", description="Ada-1 is a vendor in the Tower who sells armor and armor mods.")

@@ -1,10 +1,10 @@
 # pylint: disable=invalid-name
 import logging
-from logging import handlers
 from datetime import time, timezone
+from logging import handlers
+
 from destipy.destiny_client import DestinyClient
-from discord import (Activity, ActivityType, ApplicationContext,
-                     DiscordException, Intents)
+from discord import Activity, ActivityType, DiscordException, Intents
 from discord.ext import commands
 from discord.ext.i18n import Agent
 from pymongo import MongoClient
@@ -64,7 +64,7 @@ class Ehrenbot(commands.Bot):
         print(self.user.id)
         print("------")
 
-    async def on_application_command_error(self, ctx: ApplicationContext, error: DiscordException) -> None:
+    async def on_application_command_error(self, ctx: commands.Context, error: DiscordException) -> None:
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.respond("This command is currently on cooldown!")
         elif isinstance(error, commands.MissingPermissions):

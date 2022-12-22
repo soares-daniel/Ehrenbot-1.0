@@ -1,7 +1,7 @@
 import logging
 from datetime import time, timezone
 
-from discord import ApplicationContext, SlashCommandGroup
+from discord import SlashCommandGroup
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
@@ -23,11 +23,11 @@ class Guardian(commands.Cog):
     guardian = SlashCommandGroup(name="guardian", description="Commands for interacting with your Destiny 2 Guardian.")
 
     @guardian.command(name="profile", description="View your Destiny 2 profile.")
-    async def guardian_profile(self, ctx: ApplicationContext) -> None:
+    async def guardian_profile(self, ctx: commands.Context) -> None:
         pass
 
     @guardian.command(name="inventory", description="View your Destiny 2 inventory.")
-    async def guardian_inventory(self, ctx: ApplicationContext) -> None:
+    async def guardian_inventory(self, ctx: commands.Context) -> None:
         pass
 
     @tasks.loop(time=time(hour=3, tzinfo=timezone.utc))

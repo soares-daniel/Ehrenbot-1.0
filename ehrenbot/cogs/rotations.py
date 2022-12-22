@@ -3,11 +3,13 @@ import logging
 from datetime import date, time, timezone
 
 import aiohttp
+import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.utils_rotations import (fetch_vendor_sales, loop_check,
-                                            sort_sales, xur_embed)
+                                            sort_sales, vendor_embed,
+                                            xur_embed)
 
 
 class Rotations(commands.Cog):
@@ -17,6 +19,7 @@ class Rotations(commands.Cog):
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(self.bot.file_handler)
         self.logger.addHandler(self.bot.stream_handler)
+        self.daily_rotation.start()
 
     def get_reset_time() -> time:
         return time(hour=17, minute=0, second=0, tzinfo=timezone.utc)
@@ -55,7 +58,41 @@ class Rotations(commands.Cog):
 
     @tasks.loop(time=get_reset_time())
     async def daily_rotation(self):
-        pass
+        channel: discord.TextChannel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
+        if not channel:
+            self.logger.error("Failed to find vendor-sales channel")
+            return
+        self.logger.info("Starting daily rotation...")
+
+        # Delete previous emojis
+        emoji_collection = self.bot.database["emojis"]
+        for entry in emoji_collection.find():
+            emoji_id = entry["emoji"]
+            guild_id = entry["guild_id"]
+            emoji =  await self.bot.get_guild(guild_id).fetch_emoji(emoji_id)
+            await self.bot.get_guild(guild_id).delete_emoji(emoji)
+            emoji_collection.delete_one({"_id": emoji["_id"]})
+            self.logger.debug("Deleted emoji %s from guild %s", emoji.name, guild_id)
+
+        # Fetch vendor sales and send embeds
+        rotation_collection = self.bot.database["destiny_rotation"]
+        vendor_hashes = [672118013, 350061650]
+        for vendor_hash in vendor_hashes:
+            if not await fetch_vendor_sales(bot=self.bot, logger=self.logger, vendor_hash=vendor_hash):
+                self.logger.error("Failed to fetch vendor sales for vendor %s", vendor_hash)
+                return
+            embed = await vendor_embed(bot=self.bot, vendor_hash=vendor_hash)
+            entry = rotation_collection.find_one({"vendor_hash": vendor_hash})
+            if _id := entry.get("message_id"):
+                message = await channel.fetch_message(_id)
+                await message.edit(content="", embed=embed)
+            else:
+                await channel.send(content="", embed=embed)
+                _id = channel.last_message_id
+                rotation_collection.update_one({"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True)
+
+
+            self.logger.debug("Sent embed for vendor %s", vendor_hash)
 
     @daily_rotation.before_loop
     async def before_daily_rotation(self):

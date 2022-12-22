@@ -1,6 +1,5 @@
 from typing import Optional
 
-from discord import ApplicationContext
 from discord.ext import commands
 from discord.ext.i18n import Detector, Language
 
@@ -18,7 +17,7 @@ class Translator(commands.Cog, Detector):
         return Language.from_name(entry["language"]) if entry else None
 
     @commands.slash_command(name="lang")
-    async def set_lang(self, ctx: ApplicationContext, lang_code: str):
+    async def set_lang(self, ctx: commands.Context, lang_code: str):
         language_collection = self.bot.database["languages"]
         lang = Language.from_code(lang_code)
         if lang is None:

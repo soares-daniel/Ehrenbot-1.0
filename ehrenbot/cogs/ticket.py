@@ -4,13 +4,12 @@ import pprint
 from logging import Logger
 
 import discord
-import requests
-from discord import TextChannel, ApplicationContext
+from discord import TextChannel
 from discord.ext import commands
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_ticket import create_ticket_embed, set_ticket_status, sync_ticket
-from settings import BUNGIE_API_KEY
+from ehrenbot.utils.utils_ticket import (create_ticket_embed,
+                                         set_ticket_status, sync_ticket)
 
 
 class Ticket(commands.Cog):
@@ -39,7 +38,7 @@ class Ticket(commands.Cog):
                         self.bot.add_view(view=TicketUserView(bot=self.bot, logger=self.logger), message_id=user_message_id)
 
     @commands.slash_command(name="ticket_system", description="Initializes the ticket system")
-    async def ticket_system(self, ctx: ApplicationContext) -> None:
+    async def ticket_system(self, ctx: commands.Context) -> None:
         select_menu = TicketSelect(bot=self.bot, logger=self.logger)
         await ctx.respond("Create a ticket:", view=select_menu)
 
@@ -101,7 +100,7 @@ class TicketSelect(discord.ui.View):
         else:
             await interaction.message.edit(view=self)
             await interaction.response.send_modal(TicketModal(value, self.bot, self.logger))
-        self.logger.info(f"User {interaction.user} created a ticket with the category {value}")
+        self.logger.info("User %s created a ticket with the category %s", interaction.user.name, value)
 
 
 class TicketModal(discord.ui.Modal):
@@ -157,7 +156,7 @@ class TicketUserView(discord.ui.View):
         ticket: dict = ticket_collection.find_one({"ticket_id": int(ticket_id)})
         if not ticket:
             await interaction.response.send_message("Ticket not found", ephemeral=True, delete_after=5)
-            self.logger.error(f"Ticket {ticket_id} not found")
+            self.logger.error("Ticket %d not found", ticket_id)
             return
         await interaction.response.send_modal(TicketEditModal(self.bot, self.logger, embed))
 
@@ -184,14 +183,14 @@ class TicketAdminView(discord.ui.View):
         if embed.color == discord.Color.gold():
             embed = await set_ticket_status(self.bot,  embed, "In Work")
             button.label = "Open"
-            self.logger.info(f"User {interaction.user} set Ticket {ticket_id} to In Work")
+            self.logger.info("User %s set Ticket %d to In Work", interaction.user, ticket_id)
         elif embed.color == discord.Color.green():
             embed = await set_ticket_status(self.bot,  embed, "Open")
             button.label = "In Work"
-            self.logger.info(f"Ticket {ticket_id} was set to Open")
+            self.logger.info("Ticket %d was set to Open", ticket_id)
         await sync_ticket(self.bot, self.logger, interaction, ticket_id, embed)
         await interaction.message.edit(view=self)
-        self.logger.info(f"Ticket {ticket_id} was set to In Work")
+        self.logger.info("Ticket %d was set to In Work", ticket_id)
 
 
 class TicketEditModal(discord.ui.Modal):
@@ -218,7 +217,7 @@ class TicketEditModal(discord.ui.Modal):
         # sync ticket
         await sync_ticket(self.bot, self.logger, interaction, ticket_id, self.embed)
         await interaction.followup.send(f"Ticket {ticket_id} was edited.", ephemeral=True, delete_after=5)
-        self.logger.info(f"Ticket {ticket_id} was edited by {interaction.user}")
+        self.logger.info("Ticket %d was edited by %s", ticket_id, interaction.user)
 
 class TicketCloseModal(discord.ui.Modal):
     def __init__(self, bot, logger, embed) -> None:
@@ -241,7 +240,7 @@ class TicketCloseModal(discord.ui.Modal):
         ticket: dict = ticket_collection.find_one({"ticket_id": ticket_id})
         if ticket is None:
             await interaction.followup.send("Ticket not found", ephemeral=True, delete_after=5)
-            self.logger.error(f"Ticket {ticket_id} not found")
+            self.logger.error("Ticket %d not found", ticket_id)
             return
         admin_message_id: int = ticket["admin_message_id"]
         user_message_id: int = ticket["user_message_id"]
@@ -271,7 +270,7 @@ class ClanRequestView(discord.ui.View):
         ticket: dict = ticket_collection.find_one({"ticket_id": ticket_id})
         if ticket is None:
             await interaction.followup.send("Ticket not found", ephemeral=True, delete_after=5)
-            self.logger.warn(f"Ticket {ticket_id} not found")
+            self.logger.warn("Ticket %d not found", ticket_id)
             return
         discord_id: int = ticket["discord_id"]
         # Get destiny credentials from db
@@ -284,7 +283,7 @@ class ClanRequestView(discord.ui.View):
         user_profile = destiny_profiles.find_one({"discord_id": discord_id})
         if user_profile is None:
             await interaction.followup.send("Destiny profile not found", ephemeral=True, delete_after=5)
-            self.logger.warn(f"Destiny profile for {discord_id} not found. Notifying user to register profile.")
+            self.logger.warn("Destiny profile for %d not found. Notifying user to register profile.", discord_id)
             user = self.bot.get_user(discord_id)
             await user.send("Your profile was not found in the database. Please register your profile with the command `/registration_bungie`")
             return
@@ -296,29 +295,24 @@ class ClanRequestView(discord.ui.View):
 
         user_membership_id: int = user_profile["destiny_membership_id"]
         user_membership_type: int = user_profile["membership_type"]
-        url = f"https://www.bungie.net/Platform/GroupV2/{admin_group_id}/Members/IndividualInvite/{user_membership_type}/{user_membership_id}/"
-        payload = {
-            "GroupApplicationRequest": {
-                "message": f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen.",
-            }
-        }
-        headers = {
-            "X-API-Key": BUNGIE_API_KEY,
-            "Authorization": f"Bearer {admin_token['access_token']}"
-        }
-        response: dict = requests.post(url=url, json=payload, headers=headers)
-        response = response.json()
+        response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
+            token=admin_token,
+            group_id=admin_group_id,
+            membership_type=user_membership_type,
+            membership_id=user_membership_id,
+            message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
+        )
         pprinter = pprint.PrettyPrinter(indent=4)
         pprinter.pprint(response)
         if response is None:
             await interaction.followup.send("Invite failed", ephemeral=True, delete_after=5)
-            self.logger.warn(f"Invite failed for {discord_id}")
+            self.logger.warn("Invite failed for %d", discord_id)
             return
         if response["ErrorCode"] == 1:
             await interaction.followup.send("User was invited", ephemeral=True, delete_after=5)
             user = self.bot.get_user(discord_id)
             await user.send("You were invited to the clan")
-            self.logger.info(f"User {discord_id} was invited to Code Ehre")
+            self.logger.info("User was invited to Code Ehre", discord_id)
             ticket["ticket"]["status"] = "Closed"
             ticket_collection.update_one({"ticket_id": ticket_id}, {"$set": ticket})
             message_id = ticket["admin_message_id"]
@@ -327,7 +321,7 @@ class ClanRequestView(discord.ui.View):
             await message.edit(embed=embed, view=None)
         elif response["ErrorCode"] == 676:
             await interaction.followup.send("User is already in the clan", ephemeral=True, delete_after=5)
-            self.logger.info(f"User {discord_id} is already in the clan")
+            self.logger.info("User %d is already in the clan", discord_id)
             ticket_collection.delete_one({"ticket_id": ticket_id})
             message_id: int = ticket["admin_message_id"]
             channel: TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
@@ -335,4 +329,4 @@ class ClanRequestView(discord.ui.View):
             await message.edit(embed=embed, view=None)
         else:
             await interaction.followup.send("Something went wrong while inviting, check the logs.", ephemeral=True, delete_after=5)
-            self.logger.error(f"Something went wrong while inviting user {discord_id} to Code Ehre\n{response}")
+            self.logger.error("Something went wrong while inviting user %d to Code Ehre\n%s", discord_id, response)

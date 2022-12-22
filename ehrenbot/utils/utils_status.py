@@ -1,5 +1,6 @@
 from ehrenbot import Ehrenbot
 
+
 def update_status(response: dict, status: dict) -> dict:
     """Update the status based on the response."""
     if response is None:

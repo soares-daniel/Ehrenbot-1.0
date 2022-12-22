@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from discord import ApplicationContext, Message
+from discord import Message
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
@@ -22,7 +22,7 @@ class Registration(commands.Cog):
 
     @commands.slash_command(name="register", description="Link your Bungie account with your Discord account.")
     @commands.guild_only()
-    async def register(self, ctx: ApplicationContext) -> None:
+    async def register(self, ctx: commands.Context) -> None:
         token_collection = self.bot.database["tokens"]
         if token_collection.find_one({"discord_id": ctx.author.id}):
             await ctx.respond("You are already registered.", ephemeral=True, delete_after=10)

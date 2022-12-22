@@ -2,9 +2,10 @@ from logging import Logger
 from typing import Union
 
 import discord
-from discord import Member, User, TextChannel
+from discord import Member, TextChannel, User
 
 from ehrenbot import Ehrenbot
+
 
 def create_ticket_embed(ticket: dict, author: Union[Member, User]) -> discord.Embed:
     embed = discord.Embed(title=ticket["title"], color=discord.Color.gold())
@@ -44,7 +45,7 @@ def get_ticket_entry(bot: Ehrenbot, logger: Logger, ticket_id: int) -> dict:
             raise Exception(f"Ticket {ticket_id} not found")
         return ticket_entry
     except Exception as ex:
-        logger.error(ex)
+        logger.error("%s", ex)
         return
 
 
