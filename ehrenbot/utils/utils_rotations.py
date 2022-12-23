@@ -121,6 +121,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         armor = {}
         armor_stat_arrangement = {"Armor": ["Mobility", "Resilience", "Recovery", "Discipline", "Intellect", "Strength"]}
         weapons = {}
+        mods = {}
         with open("data/vendor_sale_item.json", "r", encoding="utf-8") as file:
             templates = json.load(file)
         sales_data = data["sales"]
@@ -130,6 +131,16 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
             item_hash = sales_data[item]["itemHash"]
             item_definition = await bot.destiny_client.decode_hash(item_hash,"DestinyInventoryItemDefinition")
             item_categories = item_definition["itemCategoryHashes"]
+            if 59 in item_categories:
+                item_type = "Mods"
+                mod_name = item_definition["displayProperties"]["name"]
+                mod_info = {
+                    "item_hash": item_hash,
+                    "category_hash": 59,
+                    "definition": item_definition,
+                    "costs": sales_data[item]["costs"],
+                }
+                mods[mod_name] = mod_info
             if 1 in item_categories:
                 item_type = "Weapons"
             elif 20 in item_categories:
@@ -211,7 +222,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
     else:
         destiny_rotation = bot.database["destiny_rotation"]
         destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                            {"$set": {"armor": armor, "weapons": weapons, "date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
+                            {"$set": {"armor": armor, "weapons": weapons, "mods": mods, "date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
                             upsert=True)
         logger.info("Vendor sales processed")
         return True
@@ -298,27 +309,55 @@ async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> Embed:
 
 async def xur_embed(bot: Ehrenbot) -> Embed:
     return Embed(title="Xûr, Agent of the Nine", description="Xûr is currently not in the tower")
-    rotation_collection = bot.database["destiny_rotation"]
-    vendor = rotation_collection.find_one({"vendor_hash": 2190858386})
-    if not vendor["sales"]:
-        raise DestinyVendorNotFound("Xur")
-    sorted_sales = vendor["sorted_sales"]
-    description = vendor["vendor"]["displayProperties"]["description"]
-    embed = Embed(title="Xûr, Agent of the Nine", description=f"\u200b{description}")
-    icon_url = vendor["vendor"]["displayProperties"]["icon"]
-    embed.set_thumbnail(url=f"https://www.bungie.net/{icon_url}")
-    for category in sorted_sales:
-        display_items = ""
-        for item in sorted_sales[category]:
-            display_items += f"{item['displayProperties']['name']}\n"
-        if category in ["Exotic Armor", "Exotic Weapon", "Warlock", "Titan", "Hunter"]:
-            embed.add_field(name=category, value=f"\u200b{display_items}\u200b", inline=True)
-        else:
-            embed.add_field(name=category, value=f"\u200b{display_items}\u200b", inline=False)
-    return embed
 
 async def banshee_embed(bot: Ehrenbot) -> Embed:
     return Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.")
 
 async def ada_embed(bot: Ehrenbot) -> Embed:
     return Embed(title="Ada-1", description="Ada-1 is a vendor in the Tower who sells armor and armor mods.")
+
+async def get_missing_mods(bot: Ehrenbot, logger: Logger, discord_id: int) -> bool:
+    try:
+        logger.debug("Getting missing mods for %d...", discord_id)
+
+        # Get all collectibles
+        profiles = bot.database["destiny_profiles"]
+        profile = profiles.find_one({"discord_id": discord_id})
+        r = await bot.destiny_client.destiny2.GetProfile(
+            destiny_membership_id=profile["profile"]["destiny_membership_id"],
+            membership_type=profile["profile"]["membership_type"],
+            components=[800])
+        collectibles = r["Response"]["profileCollectibles"]["data"]["collectibles"]
+        not_acquired = []
+
+        # Get not acquired collectibles
+        for collectible in collectibles:
+            if collectibles[collectible]["state"]%2 == 1:
+                not_acquired.append(int(collectible))
+        # Get mods from not acquired collectibles
+        final = []
+        mods = bot.database["destiny_mods"]
+        for mod in mods.find():
+            if mod["hash"] in not_acquired and mod["itemHash"] != 2527938402:
+                final.append(mod["itemHash"])
+        # Get available mods
+        if final == []:
+            return {"message": "You have all mods!"}
+        rotation_collection = bot.database["destiny_rotation"]
+        banshee_mods = rotation_collection.find_one({"vendor_hash": 672118013})["mods"]
+        ada_mods = rotation_collection.find_one({"vendor_hash": 350061650})["mods"]
+        missing_mods = {672118013: [], 350061650: []}
+        for mod in banshee_mods:
+            mod = banshee_mods[mod]
+            if mod["item_hash"] in final:
+                missing_mods[672118013].append(mod["definition"]["displayProperties"]["name"])
+        for mod in ada_mods:
+            mod = ada_mods[mod]
+            if mod["item_hash"] in final:
+                missing_mods[350061650].append(mod["definition"]["displayProperties"]["name"])
+    except Exception as ex:
+        logger.exception("Error getting missing mods: %s", ex)
+        return {672118013: [], 350061650: []}
+    else:
+        logger.info("Missing mods sent to %d", discord_id)
+        return missing_mods

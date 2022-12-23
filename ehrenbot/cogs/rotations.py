@@ -1,4 +1,5 @@
 # pylint: disable=E0211,E1121,C0206,E1123
+import datetime
 import logging
 from datetime import date, time, timezone
 
@@ -7,7 +8,7 @@ import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_rotations import (fetch_vendor_sales, loop_check,
+from ehrenbot.utils.utils_rotations import (fetch_vendor_sales, get_missing_mods, loop_check,
                                             sort_sales, vendor_embed,
                                             xur_embed)
 
@@ -41,7 +42,6 @@ class Rotations(commands.Cog):
         embed = await xur_embed(bot=self.bot)
         await ctx.send(embed=embed)
 
-
     @commands.slash_command(name="emoji", description="Get Xur's inventory")
     async def test_emoji(self, ctx: commands.Context):
         manifest = self.bot.mongo_client["d2manifest_en"]
@@ -56,7 +56,7 @@ class Rotations(commands.Cog):
         await ctx.respond(emoji)
         await ctx.guild.delete_emoji(emoji)
 
-    @tasks.loop(time=get_reset_time())
+    @tasks.loop(hours=1)
     async def daily_rotation(self):
         channel: discord.TextChannel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
         if not channel:
@@ -90,9 +90,34 @@ class Rotations(commands.Cog):
                 await channel.send(content="", embed=embed)
                 _id = channel.last_message_id
                 rotation_collection.update_one({"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True)
-
-
             self.logger.debug("Sent embed for vendor %s", vendor_hash)
+
+        # Notify members for mods
+        self.logger.debug("Notifying members for missing mods...")
+        with open("data/notify-mods.csv", "r") as f:
+            notify_mods = f.read().splitlines()
+        for member_id in notify_mods:
+            member = await self.bot.fetch_user(member_id)
+            missing_mods = await get_missing_mods(bot=self.bot, logger=self.logger, discord_id=int(member_id))
+            if missing_mods == {"message": "You have all mods!"}:
+                notify_mods.remove(member_id)
+                await member.send("You have all mods! You will no longer be notified.")
+            if missing_mods == {672118013: [], 350061650: []} or missing_mods == {"message": "You have all mods!"}:
+                continue
+            member = await self.bot.fetch_user(member_id)
+            ada_mods: list = missing_mods.get(350061650)
+            banshee_mods: list = missing_mods.get(672118013)
+            reset_time = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=1)
+            await member.send(f"You are missing mods from vendors! Go pick them up before it's too late!\nReset: {reset_time.strftime('%Y-%m-%d')} 17:00:00 UTC")
+            if ada_mods:
+                await member.send(f"Missing mods from Ada-1: ")
+            if banshee_mods:
+                await member.send(f"Missing mods from Banshee-44: {banshee_mods}")
+            self.logger.debug("Sent notification to %s", member_id)
+        # Update notify-mods.csv
+        with open("data/notify-mods.csv", "w") as f:
+            f.write("\n".join(notify_mods))
+        self.logger.info("Daily rotation complete!")
 
     @daily_rotation.before_loop
     async def before_daily_rotation(self):
