@@ -2,12 +2,11 @@ from logging import Logger
 from typing import Union
 
 import discord
-from discord import Member, TextChannel, User
 
 from ehrenbot import Ehrenbot
 
 
-def create_ticket_embed(ticket: dict, author: Union[Member, User]) -> discord.Embed:
+def create_ticket_embed(ticket: dict, author: Union[discord.Member, discord.User]) -> discord.Embed:
     embed = discord.Embed(title=ticket["title"], color=discord.Color.gold())
     embed.set_thumbnail(url=author.display_avatar.url)
     embed.add_field(value=ticket["ticket_id"], name="Id", inline=True)
@@ -56,7 +55,7 @@ async def sync_ticket(bot: Ehrenbot, logger: Logger, interaction: discord.Intera
         await interaction.followup.send("Ticket not found, please contact admin.", ephemeral=True, delete_after=5)
         return
     guild = bot.get_guild(782316238247559189)
-    admin_channel: TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")  # type: ignore
+    admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")  # type: ignore
     admin_message = await admin_channel.fetch_message(ticket_entry["admin_message_id"])
     user = bot.get_user(ticket_entry["discord_id"])
     user_message = await user.fetch_message(ticket_entry["user_message_id"])

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from discord import Embed, TextChannel, utils
+import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
@@ -25,7 +25,7 @@ class Status(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def api_status(self):
-        channel: TextChannel = utils.get(self.bot.get_all_channels(), name="api-status")
+        channel: discord.TextChannel = discord.utils.get(self.bot.get_all_channels(), name="api-status")
         if channel is None:
             return
 
@@ -42,7 +42,7 @@ class Status(commands.Cog):
         group_v2_status = await check_group_v2_status(self.bot, 4751301)
         status = [api_status, vendor_status, user_status, group_v2_status]
 
-        embed = Embed(title="Bungie.Net API Status", color=0x2f3136)
+        embed = discord.Embed(title="Bungie.Net API Status", color=0x2f3136)
         for stat in status:
             embed.add_field(name="\u200bStatus", value=stat["Status"], inline=True)
             embed.add_field(name="\u200bCategory", value=stat["Category"], inline=True)

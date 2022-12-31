@@ -1,10 +1,8 @@
 # pylint: disable=unused-argument,missing-timeout
 import logging
-import pprint
 from logging import Logger
 
 import discord
-from discord import TextChannel
 from discord.ext import commands
 
 from ehrenbot import Ehrenbot
@@ -13,7 +11,7 @@ from ehrenbot.utils.utils_ticket import (create_ticket_embed,
 
 
 class Ticket(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot) -> None:
         self.bot: Ehrenbot = bot
         self.persistent_added = False
         self.logger = logging.getLogger(__name__)
@@ -23,6 +21,7 @@ class Ticket(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
+        """ Add persistent views to tickets on startup. """
         if not self.persistent_added:
             self.bot.add_view(TicketSelect(bot=self.bot, logger=self.logger))
             ticket_collection = self.bot.database["destiny_tickets"]
@@ -38,15 +37,17 @@ class Ticket(commands.Cog):
                         self.bot.add_view(view=TicketUserView(bot=self.bot, logger=self.logger), message_id=user_message_id)
 
     @commands.slash_command(name="ticket_system", description="Initializes the ticket system")
-    async def ticket_system(self, ctx: commands.Context) -> None:
+    async def ticket_system(self, ctx: discord.ApplicationContext) -> None:
+        """ Initializes the ticket system. """
         select_menu = TicketSelect(bot=self.bot, logger=self.logger)
         await ctx.respond("Create a ticket:", view=select_menu)
 
-def setup(bot):
+def setup(bot) -> None:
     bot.add_cog(Ticket(bot))
 
 
 class TicketSelect(discord.ui.View):
+    """ Ticket select menu. """
     def __init__(self, bot, logger) -> None:
         super().__init__(timeout=None)
         self.bot: Ehrenbot = bot
@@ -70,12 +71,13 @@ class TicketSelect(discord.ui.View):
         options=options,
         custom_id="ticket_select")
     async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction) -> None:
+        """ Callback for the select menu. """
         value = select.values[0]
         if value == "Clan Join Request":
             ticket_collection = self.bot.database["destiny_tickets"]
             ticket_id = ticket_collection.count_documents({}) + 1
             guild = self.bot.get_guild(782316238247559189)
-            admin_channel: TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
+            admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
             embed = discord.Embed(title="Clan Join Request", color=discord.Color.purple())
             embed.add_field(name="Id", value=ticket_id, inline=False)
             embed.add_field(name="User", value=interaction.user.mention)
@@ -104,6 +106,7 @@ class TicketSelect(discord.ui.View):
 
 
 class TicketModal(discord.ui.Modal):
+    """ Ticket modal. """
     def __init__(self, category, bot, logger) -> None:
         super().__init__(title=category)
         self.category: str = category
@@ -114,6 +117,7 @@ class TicketModal(discord.ui.Modal):
                                            custom_id="description", style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        """ Callback for the modal. """
         await interaction.response.defer()
         ticket_collection = self.bot.database["destiny_tickets"]
         ticket_id = ticket_collection.count_documents({}) + 1
@@ -130,7 +134,7 @@ class TicketModal(discord.ui.Modal):
         }
         ticket_embed = create_ticket_embed(ticket, interaction.user)
         guild = self.bot.get_guild(782316238247559189)
-        admin_channel: TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
+        admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
         await admin_channel.send(embed=ticket_embed, view=TicketAdminView(self.bot, self.logger))
         last_admin_message_id = admin_channel.last_message_id
         await interaction.user.send(embed=ticket_embed, view=TicketUserView(self.bot, self.logger))
@@ -143,6 +147,7 @@ class TicketModal(discord.ui.Modal):
 
 
 class TicketUserView(discord.ui.View):
+    """ User view for the ticket. """
     def __init__(self, bot, logger) -> None:
         super().__init__(timeout=None)
         self.bot: Ehrenbot = bot
@@ -150,6 +155,7 @@ class TicketUserView(discord.ui.View):
 
     @discord.ui.button(label="Edit", style=discord.ButtonStyle.blurple, custom_id="edit")
     async def edit(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
+        """ Callback for the edit button. """
         embed = interaction.message.embeds[0]
         ticket_id = int(embed.fields[0].value)
         ticket_collection = self.bot.database["destiny_tickets"]
@@ -162,11 +168,16 @@ class TicketUserView(discord.ui.View):
 
     @discord.ui.button(label="Close", style=discord.ButtonStyle.red, custom_id="close")
     async def close(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
+        """ Callback for the close button. """
         embed = interaction.message.embeds[0]
         await interaction.response.send_modal(TicketCloseModal(self.bot, self.logger, embed))
 
 
 class TicketAdminView(discord.ui.View):
+    """ Admin view for the ticket.
+
+    Inherits from TicketUserView to add the in work button.
+    """
     def __init__(self, bot, logger) -> None:
         super().__init__(timeout=None)
         self.bot: Ehrenbot = bot
@@ -176,6 +187,7 @@ class TicketAdminView(discord.ui.View):
 
     @discord.ui.button(label="In Work", style=discord.ButtonStyle.green, custom_id="in_work")
     async def in_work(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
+        """ Callback for the in work button. """
         await interaction.response.defer()
         embed = interaction.message.embeds[0]
         ticket_id = int(embed.fields[0].value)
@@ -194,6 +206,7 @@ class TicketAdminView(discord.ui.View):
 
 
 class TicketEditModal(discord.ui.Modal):
+    """ Modal for editing a ticket. """
     def __init__(self, bot, logger, embed) -> None:
         super().__init__(title="Edit Ticket")
         self.bot: Ehrenbot = bot
@@ -203,6 +216,7 @@ class TicketEditModal(discord.ui.Modal):
                                            custom_id="edit", style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        """ Callback for the modal. """
         await interaction.response.defer()
         ticket_id = int(self.embed.fields[0].value)
         # Edit embed
@@ -219,7 +233,9 @@ class TicketEditModal(discord.ui.Modal):
         await interaction.followup.send(f"Ticket {ticket_id} was edited.", ephemeral=True, delete_after=5)
         self.logger.info("Ticket %d was edited by %s", ticket_id, interaction.user)
 
+
 class TicketCloseModal(discord.ui.Modal):
+    """ Modal for closing a ticket. """
     def __init__(self, bot, logger, embed) -> None:
         super().__init__(title="Close Ticket")
         self.bot: Ehrenbot = bot
@@ -229,6 +245,7 @@ class TicketCloseModal(discord.ui.Modal):
                                            custom_id="close", style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        """ Callback for the modal. """
         await interaction.response.defer()
         ticket_id = int(self.embed.fields[0].value)
         # Add solution to embed and set status to closed
@@ -246,15 +263,15 @@ class TicketCloseModal(discord.ui.Modal):
         user_message_id: int = ticket["user_message_id"]
         # Remove views on messages
         guild = self.bot.get_guild(782316238247559189)
-        admin_channel: TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
+        admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
         admin_message = await admin_channel.fetch_message(admin_message_id)
         await admin_message.edit(embed=embed, view=None)
         user_message = await interaction.user.fetch_message(user_message_id)
         await user_message.edit(embed=embed, view=None)
 
 
-# ! Currently not async (using requests. TODO: make async)
 class ClanRequestView(discord.ui.View):
+    """ View for clan requests. """
     def __init__(self, bot, logger) -> None:
         super().__init__(timeout=None)
         self.bot: Ehrenbot = bot
@@ -262,6 +279,7 @@ class ClanRequestView(discord.ui.View):
 
     @discord.ui.button(label="Invite", style=discord.ButtonStyle.blurple, custom_id="invite")
     async def invite(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
+        """ Callback for the invite button. """
         await interaction.response.defer()
         embed = interaction.message.embeds[0]
         ticket_id = int(embed.fields[0].value)
@@ -302,8 +320,6 @@ class ClanRequestView(discord.ui.View):
             membership_id=user_membership_id,
             message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
         )
-        pprinter = pprint.PrettyPrinter(indent=4)
-        pprinter.pprint(response)
         if response is None:
             await interaction.followup.send("Invite failed", ephemeral=True, delete_after=5)
             self.logger.warn("Invite failed for %d", discord_id)
@@ -316,7 +332,7 @@ class ClanRequestView(discord.ui.View):
             ticket["ticket"]["status"] = "Closed"
             ticket_collection.update_one({"ticket_id": ticket_id}, {"$set": ticket})
             message_id = ticket["admin_message_id"]
-            channel: TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
+            channel: discord.TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
             message = await channel.fetch_message(message_id)
             await message.edit(embed=embed, view=None)
         elif response["ErrorCode"] == 676:
@@ -324,9 +340,11 @@ class ClanRequestView(discord.ui.View):
             self.logger.info("User %d is already in the clan", discord_id)
             ticket_collection.delete_one({"ticket_id": ticket_id})
             message_id: int = ticket["admin_message_id"]
-            channel: TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
+            channel: discord.TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
             message = await channel.fetch_message(message_id)
             await message.edit(embed=embed, view=None)
+        elif response["ErrorCode"] == 12:
+            await interaction.followup.send("You lack the privileges to invite someone to the clan!", ephemeral=True, delete_after=5)
         else:
             await interaction.followup.send("Something went wrong while inviting, check the logs.", ephemeral=True, delete_after=5)
             self.logger.error("Something went wrong while inviting user %d to Code Ehre\n%s", discord_id, response)

@@ -54,9 +54,18 @@ class Ehrenbot(commands.Bot):
         self.DEBUG = DEBUG
         self.MAIN_GUILD_ID = 782316238247559189
         self.DEBUG_GUILD_ID = 992420245241352232
+        if DEBUG:
+            self.GUILD_ID = self.DEBUG_GUILD_ID
+            self.destiny_invite_code = "UzaGXQ5twM"
+            self.lux_invite_code = "QhGzKJSs"
+        else:
+            self.GUILD_ID = self.MAIN_GUILD_ID
+            self.destiny_invite_code = "YJmhrdcHnX"
+            self.lux_invite_code = "dzwf8PN2xs"
         self.ADMIN_DISCORD_ID = 279725513323315200
         self.BUNGIE_BASE_URL = "https://www.bungie.net/"
         self.RESET_TIME = time(hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+        self.vendor_guild_id = 0
 
     async def on_ready(self) -> None:
         print("Logged in as")

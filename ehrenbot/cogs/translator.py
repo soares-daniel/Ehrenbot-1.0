@@ -1,5 +1,6 @@
 from typing import Optional
 
+import discord
 from discord.ext import commands
 from discord.ext.i18n import Detector, Language
 
@@ -12,12 +13,14 @@ class Translator(commands.Cog, Detector):
 
     @Detector.lang_getter
     async def get_lang(self, discord_id) -> Optional[Language]:
+        """ Get the language of a user """
         language_collection = self.bot.database["languages"]
         entry = language_collection.find_one({"discord_id": discord_id})
         return Language.from_name(entry["language"]) if entry else None
 
     @commands.slash_command(name="lang")
-    async def set_lang(self, ctx: commands.Context, lang_code: str):
+    async def set_lang(self, ctx: discord.ApplicationContext, lang_code: str):
+        """ Set the language of a user """
         language_collection = self.bot.database["languages"]
         lang = Language.from_code(lang_code)
         if lang is None:

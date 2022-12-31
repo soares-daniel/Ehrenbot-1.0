@@ -1,11 +1,13 @@
 import asyncio
 import logging
 
-from discord import Message
+import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_registration import setup_profile, update_profile
+from ehrenbot.utils.exceptions import BungieAPIError
+from ehrenbot.utils.utils_registration import (check_profile_endpoints,
+                                               setup_profile, update_profile)
 
 
 class Registration(commands.Cog):
@@ -22,10 +24,16 @@ class Registration(commands.Cog):
 
     @commands.slash_command(name="register", description="Link your Bungie account with your Discord account.")
     @commands.guild_only()
-    async def register(self, ctx: commands.Context) -> None:
+    async def register(self, ctx: discord.ApplicationContext):
+        """ Link your Bungie account with your Discord account """
         token_collection = self.bot.database["tokens"]
         if token_collection.find_one({"discord_id": ctx.author.id}):
             await ctx.respond("You are already registered.", ephemeral=True, delete_after=10)
+            return
+        try:
+            await check_profile_endpoints(self.bot)
+        except BungieAPIError:
+            await ctx.respond("The Bungie API is currently unavailable. Please try again later.", ephemeral=True, delete_after=10)
             return
         await ctx.respond("Check your DMs", ephemeral=True, delete_after=10)
         await ctx.author.send("To register your Bungie account with your Discord account, please visit the following link:")
@@ -35,7 +43,7 @@ class Registration(commands.Cog):
 
         try:
             # Wait for the user to respond with the url
-            msg: Message = await self.bot.wait_for("message",
+            msg: discord.Message = await self.bot.wait_for("message",
                                           check=lambda m: m.author == ctx.author
                                           and m.channel == ctx.author.dm_channel
                                           and m.content.startswith("https://bungie.sedam.me"),
@@ -56,13 +64,21 @@ class Registration(commands.Cog):
             if await setup_profile(self.bot, ctx.author.id, token["membership_id"]):
                 if await update_profile(self.bot, ctx.author.id):
                     await ctx.author.send("Your Bungie account has been successfully linked to your Discord account!", delete_after=10)
+                    # Add the user to the mods notification list
+                    with open("data/notify-mods.csv", "a", encoding="utf-8") as file:
+                        file.write(ctx.author.id + "\n")
+                    # Give the user the "registered" role
+                    role = discord.utils.get(ctx.guild.roles, name="registered")
+                    if not role:
+                        await ctx.guild.create_role(name="registered")
+                    await ctx.author.add_roles(role)
                 else:
                     await ctx.author.send("Something went wrong while updating your profile. Please contact the admin.", delete_after=10)
             else:
                 await ctx.author.send("Something went wrong while setting up your profile. Please contact the admin.", delete_after=10)
 
     @tasks.loop(hours=1)
-    async def update_tokens(self) -> None:
+    async def update_tokens(self):
         token_collection = self.bot.database["destiny_tokens"]
         oauth = self.bot.destiny_client.oauth
         for token in token_collection.find():
@@ -71,8 +87,8 @@ class Registration(commands.Cog):
                 token_collection.update_one({"discord_id": token["discord_id"]}, {"$set": {"token": new_token}})
 
     @update_tokens.before_loop
-    async def before_update_tokens(self) -> None:
+    async def before_update_tokens(self):
         await self.bot.wait_until_ready()
 
-def setup(bot):
+def setup(bot) -> None:
     bot.add_cog(Registration(bot))

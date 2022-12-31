@@ -1,7 +1,27 @@
 import json
 
 from ehrenbot import Ehrenbot
+from ehrenbot.utils.exceptions import BungieAPIError
 
+
+async def check_profile_endpoints(bot: Ehrenbot):
+    admin_token = bot.database["destiny_tokens"].find_one({"discord_id": bot.ADMIN_DISCORD_ID})["token"]
+    admin_profile = bot.database["destiny_profiles"].find_one({"discord_id": bot.ADMIN_DISCORD_ID})["profile"]
+    # Check user endpoint
+    response = await bot.destiny_client.user.GetMembershipDataForCurrentUser(token=admin_token)
+    if response["ErrorCode"] != 1:
+        raise BungieAPIError(f"Could not get membership data for current user: {response['ErrorStatus']}")
+    # Check destiny2 endpoint
+    response = await bot.destiny_client.destiny2.GetProfile(destiny_membership_id=admin_profile["destiny_membership_id"],
+                                                            membership_type=admin_profile["membership_type"],
+                                                            components=[100])
+    if response["ErrorCode"] != 1:
+        raise BungieAPIError(f"Could not get profile: {response['ErrorStatus']}")
+    # Check group_v2 endpoint
+    response = await bot.destiny_client.group_v2.GetGroupsForMember(membership_type=admin_profile["membership_type"],
+                                                           destiny_membership_id=admin_profile["destiny_membership_id"])
+    if response["ErrorCode"] != 1:
+        raise BungieAPIError(f"Could not get groups for member: {response['ErrorStatus']}")
 
 async def setup_profile(bot: Ehrenbot, discord_id: int, membership_id: int) -> None:
     profile_collection = bot.database["destiny_profiles"]
