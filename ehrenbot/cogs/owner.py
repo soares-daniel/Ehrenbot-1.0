@@ -69,7 +69,7 @@ class Owner(commands.Cog):
                 embed = message.embeds[0]
                 embed.add_field(name="Bungie.Net", value=entry["destiny_profile"]["uniqueName"], inline=False)
                 embed.color = discord.Color.green()
-                await message.edit(content="", embed=embed)
+                await message.edit(embed=embed)
         await ctx.respond("Updated member hall")
 
 def setup(bot) -> None:
