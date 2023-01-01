@@ -42,30 +42,40 @@ class MemberManager(commands.Cog):
             if invite.uses < self.find_invite_by_code(invites_after, invite.code).uses:
                 return invite.code
 
-    @commands.slash_command(name="invite", description="Get the invite link for the server.")
-    async def invite(self, ctx: discord.ApplicationContext):
-        await ctx.respond("test")
+    @commands.slash_command(name="setup_members", description="Get the invite link for the server.")
+    async def setup_members(self, ctx: discord.ApplicationContext):
+        await ctx.defer()
         for member in ctx.guild.members:
             embed = discord.Embed(title=f"{member.display_name}")
             embed.set_thumbnail(url=member.display_avatar.url)
-            join_date = member.joined_at
-            embed = embed.add_field(name="Joined", value=f"{join_date.strftime('%d.%m.%Y %H:%M')}")
+            embed.add_field(name="User Info", value=f"<@{member.id}> \n**ID**: {member.id}", inline=False)
             invite_code = await self.get_latest_invite_code(member=member)
             if not invite_code or invite_code == []:
-                invite_code = "None"
-            embed = embed.add_field(name="Invite Code", value=f"{invite_code}", inline=False)
+                invite_code = "YJmhrdcHnX"
+                if member.id == self.bot.ADMIN_DISCORD_ID:
+                    invite_code = "OWNER"
+                if ctx.guild.id == self.bot.DEBUG_GUILD_ID:
+                    invite_code = "None"
+            embed.add_field(name="Invite Code", value=f"{invite_code}", inline=False)
+            created = int(member.created_at.timestamp())
+            embed.add_field(name="Account Created",
+                    value=f"<t:{created}:D> \n<t:{created}:t> \n<t:{created}:R>", inline=True)
+            joined = int(member.joined_at.timestamp())
+            embed.add_field(name="Joined",
+                            value=f"<t:{joined}:D> \n<t:{joined}:t> \n<t:{joined}:R>", inline=True)
             if member.bot:
                 embed.color = 0x2f3136
                 embed.set_thumbnail(url=member.avatar.url)
             else:
                 embed.color = discord.Color.blurple()
             # Add member to member hall and database
-            member_hall = discord.utils.get(member.guild.channels, name="member-hall")
+            member_hall: discord.TextChannel = discord.utils.get(member.guild.channels, name="member-hall")
             message: discord.Message = await member_hall.send(embed=embed)
             message_id = message.id
             member_collection = self.bot.database["members"]
-            member_collection.insert_one({"discord_id": member.id, "message_id": message_id,
-                                        "joined_at": member.joined_at, "invite_url": invite_code})
+            member_collection.insert_one({"discord_id": member.id, "message_id": message_id, "channel_id": member_hall.id,
+                                          "joined_at": member.joined_at, "invite_url": invite_code, "is_bot": member.bot})
+        await ctx.respond("Done!")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -73,9 +83,17 @@ class MemberManager(commands.Cog):
         self.logger.info("Member %s joined the server.", member.display_name)
         embed = discord.Embed(title=f"{member.display_name}")
         embed.set_thumbnail(url=member.display_avatar.url)
-        embed = embed.add_field(name="Joined the server", value=f"{member.joined_at}")
+        embed.add_field(name="User Info", value=f"<@{member.id}> \n**ID**: {member.id}", inline=False)
         invite_code = await self.get_latest_invite_code(member=member)
-        embed = embed.add_field(name="Invite Code", value=f"{invite_code}")
+        if not invite_code or invite_code == []:
+            invite_code = "None"
+        embed.add_field(name="Invite Code", value=f"{invite_code}", inline=False)
+        created = int(member.created_at.timestamp())
+        embed.add_field(name="Account Created",
+                value=f"<t:{created}:D> \n<t:{created}:t> \n<t:{created}:R>", inline=True)
+        joined = int(member.joined_at.timestamp())
+        embed.add_field(name="Joined",
+                        value=f"<t:{joined}:D> \n<t:{joined}:t> \n<t:{joined}:R>", inline=True)
         if member.bot:
             embed.color = 0x2f3136
             embed.set_thumbnail(url=member.avatar.url)
@@ -86,15 +104,15 @@ class MemberManager(commands.Cog):
 
         # Prevent duplicate messages on join spam
         last_message = await member_hall.history(limit=1).flatten()
-        last_message_embed = last_message[0].embeds[0]
-        if last_message_embed.title == embed.title:
-            return
-
+        if last_message[0].embeds:
+            last_message_embed = last_message[0].embeds[0]
+            if last_message_embed.title == embed.title:
+                return
         message: discord.Message = await member_hall.send(embed=embed)
         message_id = message.id
         member_collection = self.bot.database["members"]
-        member_collection.insert_one({"discord_id": member.id, "message_id": message_id,
-                                      "joined_at": member.joined_at, "invite_url": invite_code})
+        member_collection.insert_one({"discord_id": member.id, "message_id": message_id, "channel_id": member_hall.id,
+                                      "joined_at": member.joined_at, "invite_url": invite_code, "is_bot": member.bot})
 
         # Give member the correct role
         if invite_code == self.bot.destiny_invite_code:

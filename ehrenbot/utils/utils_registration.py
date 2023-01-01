@@ -6,7 +6,7 @@ from ehrenbot.utils.exceptions import BungieAPIError
 
 async def check_profile_endpoints(bot: Ehrenbot):
     admin_token = bot.database["destiny_tokens"].find_one({"discord_id": bot.ADMIN_DISCORD_ID})["token"]
-    admin_profile = bot.database["destiny_profiles"].find_one({"discord_id": bot.ADMIN_DISCORD_ID})["profile"]
+    admin_profile = bot.database["members"].find_one({"discord_id": bot.ADMIN_DISCORD_ID})["destiny_profile"]
     # Check user endpoint
     response = await bot.destiny_client.user.GetMembershipDataForCurrentUser(token=admin_token)
     if response["ErrorCode"] != 1:
@@ -24,19 +24,19 @@ async def check_profile_endpoints(bot: Ehrenbot):
         raise BungieAPIError(f"Could not get groups for member: {response['ErrorStatus']}")
 
 async def setup_profile(bot: Ehrenbot, discord_id: int, membership_id: int) -> None:
-    profile_collection = bot.database["destiny_profiles"]
+    profile_collection = bot.database["members"]
     with open("ehrenbot/data/guardian_template.json", "r", encoding="utf-8") as file:
         guardian_template = json.load(file)
     profile_collection.insert_one({"discord_id": discord_id, "profile": guardian_template, "membership_id": membership_id})
 
 async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
     token_collection = bot.database["destiny_tokens"]
-    profile_collection = bot.database["destiny_profiles"]
+    profile_collection = bot.database["members"]
     token = token_collection.find_one({"discord_id": discord_id})["token"]
     if not token:
         bot.logger.error("Could not find token for %d", discord_id)
         return False
-    profile = profile_collection.find_one({"discord_id": discord_id})["profile"]
+    profile = profile_collection.find_one({"discord_id": discord_id})["destiny_profile"]
     if not profile:
         bot.logger.error("Could not find profile for %d, creating new profile...", discord_id)
         await setup_profile(bot, discord_id, token["membership_id"])
@@ -96,7 +96,7 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
         if data:
             profile["group_id"] = data[0]["member"]["groupId"]
 
-        profile_collection.update_one({"discord_id": discord_id}, {"$set": {"profile": profile}})
+        profile_collection.update_one({"discord_id": discord_id}, {"$set": {"destiny_profile": profile}})
         bungie_name = profile["unique_name"]
         bot.logger.info("%s has been updated successfully!", bungie_name)
         return True

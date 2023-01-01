@@ -42,9 +42,9 @@ class Status(commands.Cog):
             return
 
         token_collection = self.bot.database["destiny_tokens"]
-        profile_collection = self.bot.database["destiny_profiles"]
+        profile_collection = self.bot.database["members"]
         token = token_collection.find_one({"discord_id": self.bot.ADMIN_DISCORD_ID})["token"]
-        profile = profile_collection.find_one({"discord_id": self.bot.ADMIN_DISCORD_ID})["profile"]
+        profile = profile_collection.find_one({"discord_id": self.bot.ADMIN_DISCORD_ID})["destiny_profile"]
         api_status = await check_api_status(self.bot)
         destiny_membership_id = profile["destiny_membership_id"]
         membership_type = profile["membership_type"]

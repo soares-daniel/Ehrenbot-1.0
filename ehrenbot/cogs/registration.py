@@ -72,6 +72,15 @@ class Registration(commands.Cog):
                     if not role:
                         await ctx.guild.create_role(name="Registered")
                     await ctx.author.add_roles(role)
+                    # Update memberhall
+                    members_collection = self.bot.database["members"]
+                    member = members_collection.find_one({"discord_id": ctx.author.id})
+                    channel = ctx.guild.get_channel(member["channel_id"])
+                    message = await channel.fetch_message(member["message_id"])
+                    embed = message.embeds[0]
+                    embed.add_field(name="Bungie.Net", value=member["destiny_profile"]["uniqueName"], inline=False)
+                    embed.color = discord.Color.green()
+                    await message.edit(content="", embed=embed)
                 else:
                     await ctx.author.send("Something went wrong while updating your profile. Please contact the admin.", delete_after=10)
             else:

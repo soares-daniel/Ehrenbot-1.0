@@ -17,9 +17,9 @@ from ehrenbot.utils.exceptions import (BungieMaintenance,
 async def check_vendors(bot: Ehrenbot) -> str:
     discord_id = bot.ADMIN_DISCORD_ID
     token_collection = bot.database["destiny_tokens"]
-    profile_collection = bot.database["destiny_profiles"]
+    profile_collection = bot.database["members"]
     token = token_collection.find_one({"discord_id": discord_id})["token"]
-    profile = profile_collection.find_one({"discord_id": discord_id})["profile"]
+    profile = profile_collection.find_one({"discord_id": discord_id})["destiny_profile"]
     destiny2 = bot.destiny_client.destiny2
     response = await destiny2.GetVendors(token=token,
                                         character_id=profile["character_ids"][0],
@@ -51,9 +51,9 @@ async def loop_check(bot: Ehrenbot) -> bool:
 async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
     discord_id = bot.ADMIN_DISCORD_ID
     token_collection = bot.database["destiny_tokens"]
-    profile_collection = bot.database["destiny_profiles"]
+    profile_collection = bot.database["members"]
     token = token_collection.find_one({"discord_id": discord_id})["token"]
-    profile = profile_collection.find_one({"discord_id": discord_id})["profile"]
+    profile = profile_collection.find_one({"discord_id": discord_id})["destiny_profile"]
     destiny2 = bot.destiny_client.destiny2
     result = {}
     for character_id in profile["character_ids"]:
@@ -246,11 +246,11 @@ async def get_missing_mods(bot: Ehrenbot, logger: Logger, discord_id: int) -> bo
         logger.debug("Getting missing mods for %d...", discord_id)
 
         # Get all collectibles
-        profiles = bot.database["destiny_profiles"]
-        profile = profiles.find_one({"discord_id": discord_id})
+        profile_collection = bot.database["members"]
+        profile = profile_collection.find_one({"discord_id": discord_id})
         response = await bot.destiny_client.destiny2.GetProfile(
-            destiny_membership_id=profile["profile"]["destiny_membership_id"],
-            membership_type=profile["profile"]["membership_type"],
+            destiny_membership_id=profile["destiny_profile"]["destiny_membership_id"],
+            membership_type=profile["destiny_profile"]["membership_type"],
             components=[800])
         collectibles = response["Response"]["profileCollectibles"]["data"]["collectibles"]
         not_acquired = []
@@ -323,7 +323,8 @@ async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
         if missing_mods == {"message": "You have all mods!"}:
             notify_mods.remove(member_id)
             await member.send("You have all mods! You will no longer be notified.")
-        if missing_mods == {672118013: [], 350061650: []} or missing_mods == {"message": "You have all mods!"}:
+            continue
+        if missing_mods == {672118013: [], 350061650: []}:
             continue
         member = await bot.fetch_user(member_id)
         ada_mods: list = missing_mods.get(350061650)

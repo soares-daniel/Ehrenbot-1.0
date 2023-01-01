@@ -292,21 +292,21 @@ class ClanRequestView(discord.ui.View):
             return
         discord_id: int = ticket["discord_id"]
         # Get destiny credentials from db
-        destiny_profiles = self.bot.database["destiny_profiles"]
-        admin_profile = destiny_profiles.find_one({"discord_id": interaction.user.id})
+        profile_collection = self.bot.database["members"]
+        admin_profile = profile_collection.find_one({"discord_id": interaction.user.id})
         if admin_profile is None:
             await interaction.followup.send("Admin profile not found, please register.", ephemeral=True, delete_after=5)
             self.logger.warn("Admin profile not found")
             return
-        user_profile = destiny_profiles.find_one({"discord_id": discord_id})
+        user_profile = profile_collection.find_one({"discord_id": discord_id})
         if user_profile is None:
             await interaction.followup.send("Destiny profile not found", ephemeral=True, delete_after=5)
             self.logger.warn("Destiny profile for %d not found. Notifying user to register profile.", discord_id)
             user = self.bot.get_user(discord_id)
             await user.send("Your profile was not found in the database. Please register your profile with the command `/registration_bungie`")
             return
-        admin_profile: dict = admin_profile["profile"]
-        user_profile: dict = user_profile["profile"]
+        admin_profile: dict = admin_profile["destiny_profile"]
+        user_profile: dict = user_profile["destiny_profile"]
         token_collection = self.bot.database["destiny_tokens"]
         admin_token: dict = token_collection.find_one({"discord_id": interaction.user.id})["token"]
         admin_group_id: int = admin_profile["group_id"]
