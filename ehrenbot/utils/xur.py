@@ -18,7 +18,6 @@ async def xur_rotation(bot: Ehrenbot, logger: logging.Logger):
         logger.error("Failed to fetch vendor sales for vendor %s", vendor_hash)
         return
     bot.vendor_guild_id = 1057711135668850688
-    #bot.vendor_guild_id = 1057709724843397282
     embed = await xur_embed(bot)
     # Set footer
     current_time = datetime.datetime.now(datetime.timezone.utc)
