@@ -45,7 +45,10 @@ class MemberManager(commands.Cog):
     @commands.slash_command(name="setup_members", description="Get the invite link for the server.")
     async def setup_members(self, ctx: discord.ApplicationContext):
         await ctx.defer()
-        for member in ctx.guild.members:
+        members = ctx.guild.members
+        #sort members by join date
+        members.sort(key=lambda x: x.joined_at)
+        for member in members:
             embed = discord.Embed(title=f"{member.display_name}")
             embed.set_thumbnail(url=member.display_avatar.url)
             embed.add_field(name="User Info", value=f"<@{member.id}> \n**ID**: {member.id}", inline=False)
