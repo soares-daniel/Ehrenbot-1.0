@@ -67,9 +67,10 @@ class Owner(commands.Cog):
                 channel = ctx.guild.get_channel(entry["channel_id"])
                 message = await channel.fetch_message(message_id)
                 embed = message.embeds[0]
-                embed.add_field(name="Bungie.Net", value=entry["destiny_profile"]["uniqueName"], inline=False)
+                name = entry["destiny_profile"]["uniqueName"] if "uniqueName" in entry["destiny_profile"] else entry["destiny_profile"]["displayName"]
+                embed.add_field(name="Bungie.Net", value=name, inline=False)
                 embed.color = discord.Color.green()
-                await message.edit(embed=embed)
+                await message.edit(content="", embed=embed)
         await ctx.respond("Updated member hall")
 
 def setup(bot) -> None:
