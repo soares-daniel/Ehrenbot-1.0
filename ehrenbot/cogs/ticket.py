@@ -40,7 +40,7 @@ class Ticket(commands.Cog):
     async def ticket_system(self, ctx: discord.ApplicationContext) -> None:
         """ Initializes the ticket system. """
         select_menu = TicketSelect(bot=self.bot, logger=self.logger)
-        await ctx.respond("Create a ticket:", view=select_menu)
+        await ctx.respond("\u200bCreate a ticket:", view=select_menu)
 
 def setup(bot) -> None:
     bot.add_cog(Ticket(bot))
@@ -100,7 +100,7 @@ class TicketSelect(discord.ui.View):
                 "Request was created.\nPlease wait for a clan admin to respond to your request.",
                 ephemeral=True, delete_after=10)
         else:
-            await interaction.message.edit(view=self)
+            await interaction.message.edit(content="", view=self)
             await interaction.response.send_modal(TicketModal(value, self.bot, self.logger))
         self.logger.info("User %s created a ticket with the category %s", interaction.user.name, value)
 
@@ -201,7 +201,7 @@ class TicketAdminView(discord.ui.View):
             button.label = "In Work"
             self.logger.info("Ticket %d was set to Open", ticket_id)
         await sync_ticket(self.bot, self.logger, interaction, ticket_id, embed)
-        await interaction.message.edit(view=self)
+        await interaction.message.edit(content="", view=self)
         self.logger.info("Ticket %d was set to In Work", ticket_id)
 
 
@@ -265,9 +265,9 @@ class TicketCloseModal(discord.ui.Modal):
         guild = self.bot.get_guild(782316238247559189)
         admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")
         admin_message = await admin_channel.fetch_message(admin_message_id)
-        await admin_message.edit(embed=embed, view=None)
+        await admin_message.edit(content="", embed=embed, view=None)
         user_message = await interaction.user.fetch_message(user_message_id)
-        await user_message.edit(embed=embed, view=None)
+        await user_message.edit(content="", embed=embed, view=None)
 
 
 class ClanRequestView(discord.ui.View):
@@ -334,7 +334,7 @@ class ClanRequestView(discord.ui.View):
             message_id = ticket["admin_message_id"]
             channel: discord.TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
             message = await channel.fetch_message(message_id)
-            await message.edit(embed=embed, view=None)
+            await message.edit(content="", embed=embed, view=None)
         elif response["ErrorCode"] == 676:
             await interaction.followup.send("User is already in the clan", ephemeral=True, delete_after=5)
             self.logger.info("User %d is already in the clan", discord_id)

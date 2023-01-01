@@ -48,7 +48,6 @@ class Rotations(commands.Cog):
             await guild.delete_emoji(emoji)
         await ctx.respond(f"Deleted all emojis from guild {guild_id}", delete_after=5)
 
-    # ! if already in database, retry again in 5 minutes
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
         self.banshee_ada.start()
