@@ -18,6 +18,7 @@ class Announcer(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        channel = None
         if message.channel.name == "ehrenbot-updates-sedam":
             channel = discord.utils.get(message.guild.channels, name="ehrenbot-updates")
         if message.channel.name == "server-announcements-sedam":
@@ -28,6 +29,7 @@ class Announcer(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        channel = None
         if before.channel.name == "ehrenbot-updates-sedam":
             channel: discord.TextChannel = discord.utils.get(before.guild.channels, name="ehrenbot-updates")
         if before.channel.name == "server-announcements-sedam":
