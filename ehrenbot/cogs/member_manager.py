@@ -6,6 +6,7 @@ from discord.ext import commands, tasks
 
 from ehrenbot.bot import Ehrenbot
 
+
 class MemberManager(commands.Cog):
 
     def __init__(self, bot) -> None:
@@ -88,7 +89,7 @@ class MemberManager(commands.Cog):
         last_message_embed = last_message[0].embeds[0]
         if last_message_embed.title == embed.title:
             return
-        
+
         message: discord.Message = await member_hall.send(embed=embed)
         message_id = message.id
         member_collection = self.bot.database["members"]

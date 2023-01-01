@@ -68,9 +68,9 @@ class Registration(commands.Cog):
                     with open("data/notify-mods.csv", "a", encoding="utf-8") as file:
                         file.write(ctx.author.id + "\n")
                     # Give the user the "registered" role
-                    role = discord.utils.get(ctx.guild.roles, name="registered")
+                    role = discord.utils.get(ctx.guild.roles, name="Registered")
                     if not role:
-                        await ctx.guild.create_role(name="registered")
+                        await ctx.guild.create_role(name="Registered")
                     await ctx.author.add_roles(role)
                 else:
                     await ctx.author.send("Something went wrong while updating your profile. Please contact the admin.", delete_after=10)
