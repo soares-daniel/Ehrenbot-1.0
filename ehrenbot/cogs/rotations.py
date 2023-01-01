@@ -1,8 +1,7 @@
 # pylint: disable=E0211,E1121,C0206,E1123
 import logging
-from datetime import date, time, timezone, datetime
+from datetime import date, datetime, time, timezone
 
-import aiohttp
 import discord
 from discord.ext import commands, tasks
 
@@ -35,7 +34,7 @@ class Rotations(commands.Cog):
         await banshee_ada_rotation(self.bot, self.logger)
         await ctx.respond("Banshee-44 and Ada-1 rotation started.", ephemeral=True, delete_after=5)
 
-    @commands.slash_command(name="test", description="Test command")
+    @rotation.command(name="del_emojis", description="Deletes all emojis from a guild. ONLY USE ON ROTATION SERVERS!")
     async def del_emojis(self, ctx: discord.ApplicationContext, guild_id: int = 0):
         await ctx.defer()
         if guild_id == 0:
@@ -44,20 +43,6 @@ class Rotations(commands.Cog):
         for emoji in guild.emojis:
             await guild.delete_emoji(emoji)
         await ctx.respond(f"Deleted all emojis from guild {guild_id}")
-
-    @commands.slash_command(name="emoji", description="Get Xur's inventory")
-    async def test_emoji(self, ctx: discord.ApplicationContext):
-        manifest = self.bot.mongo_client["d2manifest_en"]
-        destiny_stat_definition = manifest["DestinyStatDefinition"]
-        stat_hash = 392767087
-        stat = destiny_stat_definition.find_one({"hash": stat_hash})
-        icon_url=stat["displayProperties"]["icon"]
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://www.bungie.net" + icon_url) as resp:
-                emoji_img = await resp.read()
-        emoji = await ctx.guild.create_custom_emoji(name="test", image=emoji_img)
-        await ctx.respond(emoji)
-        await ctx.guild.delete_emoji(emoji)
 
     # ! if already in database, retry again in 5 minutes
     @tasks.loop(hours=1)
@@ -72,23 +57,26 @@ class Rotations(commands.Cog):
             await self.bot.get_guild(guild_id).delete_emoji(emoji)
             emoji_collection.delete_one({"emoji_id": emoji_id})
             self.logger.debug("Deleted emoji %s from guild %s", emoji.name, guild_id)
+        self.logger.debug("Done deleting emojis")
 
     @daily_vendor_rotation.before_loop
     async def before_daily_vendor_rotation(self):
+        await self.bot.wait_until_ready()
         if not await loop_check(self.bot):
             self.daily_vendor_rotation.cancel()
 
     @tasks.loop(hours=1)
     async def xur_rotation(self):
-        self.logger.debug("Updating Xur's inventory")
+        self.logger.debug("Starting Xur rotation...")
         weekdays = [0, 1, 2, 3]
         if date.today().weekday() in weekdays:
-            embed = discord.Embed(title="Xur's inventory", description="Xur is not here today. He will return again on **Friday.**")
+            embed = discord.Embed(title="Xûr", description="Xur is not here today. He will return again on **Friday.**", color=0xcdad36)
         elif date.today().weekday() == 4:
-            embed = discord.Embed(title="Xur's inventory", description="XUR ROTATION IS NOT IMPLEMENTED YET")
+            embed = discord.Embed(title="Xûr", description="XUR ROTATION IS NOT IMPLEMENTED YET", color=0xcdad36)
         else:
-            embed = discord.Embed(title="Xur's inventory", description="XUR ROTATION IS NOT IMPLEMENTED YET")
-        embed.set_image(url="https://i.imgur.com/4ZQZ9Zm.png")
+            embed = discord.Embed(title="Xûr", description="XUR ROTATION IS NOT IMPLEMENTED YET", color=0xcdad36)
+        embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
+        embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
         current_time = datetime.now(timezone.utc)
         embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
@@ -100,16 +88,17 @@ class Rotations(commands.Cog):
         entry = rotation_collection.find_one({"vendor_hash": 2190858386})
         if entry["message_id"] == 0:
             channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
-            message = await channel.send(embed=embed)
+            message = await channel.send(content="", embed=embed)
             rotation_collection.update_one({"vendor_hash": 2190858386}, {"$set": {"message_id": message.id}})
         else:
             message_id = entry["message_id"]
             channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
             message = await channel.fetch_message(message_id)
-            await message.edit(embed=embed)
+            await message.edit(content="", embed=embed)
 
     @xur_rotation.before_loop
     async def before_xur_rotation(self):
+        await self.bot.wait_until_ready()
         if not await loop_check(self.bot):
             self.xur_rotation.cancel()
 

@@ -70,7 +70,6 @@ class Ehrenbot(commands.Bot):
     async def on_ready(self) -> None:
         print("Logged in as")
         print(self.user.name)
-        print(self.user.id)
         print("------")
 
     async def on_application_command_error(self, ctx: commands.Context, error: DiscordException) -> None:

@@ -377,14 +377,13 @@ async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> discord.Embed:
             embed = await banshee_embed(bot)
         case 350061650:
             bot.vendor_guild_id = 1057710325631295590
-            #bot.vendor_guild_id = 1057711135668850688
             embed = await ada_embed(bot)
         case _:
             embed = discord.Embed(title="Vendor", description="Vendor not found")
 
     # Set footer
     current_time = datetime.datetime.now(timezone.utc)
-    embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC                                                            ")
+    embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
     return embed
 
 async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
@@ -429,9 +428,10 @@ async def mod_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     return mod_string
 
 async def banshee_embed(bot: Ehrenbot) -> discord.Embed:
-    embed = discord.Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.")
+    embed = discord.Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.", color=0x567e9d)
     vendor_hash = 672118013
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/banshee-icon.png")
+    embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/3142923bc72bcd5a769badc26bd8b508.jpg")
     mod_string = await mod_embed_field(bot, vendor_hash)
     embed.add_field(name="Mods", value=mod_string, inline=True)
     weapon_string = await weapon_embed_field(bot, vendor_hash)
@@ -442,19 +442,22 @@ async def ada_embed(bot: Ehrenbot) -> discord.Embed:
     embed = discord.Embed(title="Ada-1", description="Ada-1 is a vendor in the Tower who sells armor and armor mods.")
     vendor_hash = 350061650
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/ada-icon.png")
+    embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/e6a489d1386e2928f9a5a33b775b8f03.jpg")
     mod_string = await mod_embed_field(bot, vendor_hash)
-    embed.add_field(name="Mods", value=mod_string, inline=False)
+    embed.add_field(name="Mods", value=mod_string, inline=True)
     warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")
-    embed.add_field(name="Warlock", value=warlock_string, inline=False)
+    embed.add_field(name="Warlock", value=warlock_string, inline=True)
     titan_string = await armor_embed_field(bot, vendor_hash, "Titan")
     embed.add_field(name="Titan", value=titan_string, inline=False)
     hunter_string = await armor_embed_field(bot, vendor_hash, "Hunter")
-    embed.add_field(name="Hunter", value=hunter_string, inline=False)
+    embed.add_field(name="Hunter", value=hunter_string, inline=True)
     return embed
 
 async def xur_embed(bot: Ehrenbot) -> discord.Embed:
-    embed = discord.Embed(title="Xûr", description="Xûr is a vendor who sells exotic weapons, armor.")
+    embed = discord.Embed(title="Xûr", description="Xûr is a vendor who sells exotic weapons, armor.", color=0xcdad36)
     vendor_hash = 2190858386
+    embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
+    embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
     warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")
     embed.add_field(name="Warlock", value=warlock_string, inline=True)
     titan_string = await armor_embed_field(bot, vendor_hash, "Titan")
