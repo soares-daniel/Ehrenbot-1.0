@@ -30,7 +30,7 @@ async def set_ticket_status(bot: Ehrenbot, embed: discord.Embed, status: str) ->
     ticket_collection = bot.database["destiny_tickets"]
     ticket_id = int(embed.fields[0].value)
     ticket_entry: dict = ticket_collection.find_one({"ticket_id": ticket_id})
-    user_id: int = ticket_entry["discordI¨_id"]
+    user_id: int = ticket_entry["discord_id"]
     user = bot.get_user(user_id)
     await user.send(f"Your ticket status has been updated to **{status}**", delete_after=3600)
     return embed
