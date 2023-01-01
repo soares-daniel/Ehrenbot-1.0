@@ -32,7 +32,13 @@ class Rotations(commands.Cog):
     async def rotation_banshee_ada(self, ctx: discord.ApplicationContext):
         """ Start Banshee-44 and Ada-1 rotation manually. """
         await banshee_ada_rotation(self.bot, self.logger)
-        await ctx.respond("Banshee-44 and Ada-1 rotation started.", ephemeral=True, delete_after=5)
+        await ctx.respond("Banshee-44 and Ada-1 rotation started.", delete_after=5)
+
+    @rotation.command(name="xur", description="Start Xur rotation manually.")
+    async def rotation_xur(self, ctx: discord.ApplicationContext):
+        """ Start Xur rotation manually. """
+        await xur_sales(self.bot, self.logger)
+        await ctx.respond("Xur rotation started.", ephemeral=True, delete_after=5)
 
     @rotation.command(name="del_emojis", description="Deletes all emojis from a guild. ONLY USE ON ROTATION SERVERS!")
     async def del_emojis(self, ctx: discord.ApplicationContext, guild_id: int = 0):
@@ -101,6 +107,38 @@ class Rotations(commands.Cog):
         await self.bot.wait_until_ready()
         if not await loop_check(self.bot):
             self.xur_rotation.cancel()
+
+    async def xur_sales(bot: Ehrenbot, logger: logging.Logger):
+        logger.debug("Starting Xur rotation...")
+        weekdays = [0, 1, 2, 3]
+        if date.today().weekday() in weekdays:
+            embed = discord.Embed(title="Xûr", description="Xur is not here today. He will return again on **Friday.**", color=0xcdad36)
+        elif date.today().weekday() == 4:
+            embed = discord.Embed(title="Xûr", description="XUR ROTATION IS NOT IMPLEMENTED YET", color=0xcdad36)
+        else:
+            embed = discord.Embed(title="Xûr", description="XUR ROTATION IS NOT IMPLEMENTED YET", color=0xcdad36)
+        embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
+        embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
+        current_time = datetime.now(timezone.utc)
+        embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
+
+        # Send embed to vendor channel
+        rotation_collection = bot.database["destiny_rotation"]
+        entry = rotation_collection.find_one({"vendor_hash": 2190858386})
+        if entry is None:
+            rotation_collection.insert_one({"vendor_hash": 2190858386, "message_id": 0})
+        entry = rotation_collection.find_one({"vendor_hash": 2190858386})
+        if entry["message_id"] == 0:
+            channel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
+            message = await channel.send(content="", embed=embed)
+            rotation_collection.update_one({"vendor_hash": 2190858386}, {"$set": {"message_id": message.id}})
+        else:
+            message_id = entry["message_id"]
+            channel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
+            message = await channel.fetch_message(message_id)
+            await message.edit(content="", embed=embed)
+
+
 
 def setup(bot) -> None:
     bot.add_cog(Rotations(bot))
