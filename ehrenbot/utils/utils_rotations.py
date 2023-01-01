@@ -444,13 +444,13 @@ async def ada_embed(bot: Ehrenbot) -> discord.Embed:
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/ada-icon.png")
     embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/e6a489d1386e2928f9a5a33b775b8f03.jpg")
     mod_string = await mod_embed_field(bot, vendor_hash)
-    embed.add_field(name="Mods", value=mod_string, inline=True)
+    embed.add_field(name="Mods", value=mod_string, inline=False)
     warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")
-    embed.add_field(name="Warlock", value=warlock_string, inline=True)
+    embed.add_field(name="Warlock", value=warlock_string, inline=False)
     titan_string = await armor_embed_field(bot, vendor_hash, "Titan")
     embed.add_field(name="Titan", value=titan_string, inline=False)
     hunter_string = await armor_embed_field(bot, vendor_hash, "Hunter")
-    embed.add_field(name="Hunter", value=hunter_string, inline=True)
+    embed.add_field(name="Hunter", value=hunter_string, inline=False)
     return embed
 
 async def xur_embed(bot: Ehrenbot) -> discord.Embed:

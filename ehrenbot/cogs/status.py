@@ -50,6 +50,7 @@ class Status(commands.Cog):
             time = datetime.utcnow()
         embed.set_footer(text=f"Last updated: {time.strftime('%d/%m/%Y %H:%M:%S')} UTC")
         embed.set_image(url="https://www.bungie.net/pubassets/pkgs/157/157031/D2_DPS_Gif.gif")
+        embed.set_thumbnail(url="https://img2.freepng.fr/20180411/yzw/kisspng-destiny-2-halo-3-odst-bungie-crest-5ace71b9e962c7.894821781523478969956.jpg")
 
         if channel.last_message_id is None:
             await channel.send(embed=embed)

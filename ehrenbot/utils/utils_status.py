@@ -36,7 +36,7 @@ async def check_vendor_status(bot: Ehrenbot, destiny_membership_id: int, members
                                          character_id=character_id,
                                          destiny_membership_id=destiny_membership_id,
                                          membership_type=membership_type,
-                                         components=[400])
+                                         components=[400,304,305])
     return update_status(response, status)
 
 async def check_group_v2_status(bot: Ehrenbot, group_id: int) -> bool:
