@@ -7,10 +7,11 @@ from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.utils_rotations import banshee_ada_rotation, loop_check
+from ehrenbot.utils.xur import xur_rotation
 
 
 class Rotations(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot) -> None:
         self.bot: Ehrenbot = bot
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -79,30 +80,42 @@ class Rotations(commands.Cog):
         weekdays = [0, 1, 2, 3]
         if date.today().weekday() in weekdays:
             embed = discord.Embed(title="Xûr", description="Xur is not here today. He will return again on **Friday.**", color=0xcdad36)
-        elif date.today().weekday() == 4:
-            embed = discord.Embed(title="Xûr", description="XUR ROTATION IS NOT IMPLEMENTED YET", color=0xcdad36)
-        else:
-            embed = discord.Embed(title="Xûr", description="XUR ROTATION IS NOT IMPLEMENTED YET", color=0xcdad36)
-        embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
-        embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
-        current_time = datetime.now(timezone.utc)
-        embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
+            embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
+            embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
+            current_time = datetime.now(timezone.utc)
+            embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
-        # Send embed to vendor channel
-        rotation_collection = self.bot.database["destiny_rotation"]
-        entry = rotation_collection.find_one({"vendor_hash": 2190858386})
-        if entry is None:
-            rotation_collection.insert_one({"vendor_hash": 2190858386, "message_id": 0})
-        entry = rotation_collection.find_one({"vendor_hash": 2190858386})
-        if entry["message_id"] == 0:
-            channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
-            message = await channel.send(content="", embed=embed)
-            rotation_collection.update_one({"vendor_hash": 2190858386}, {"$set": {"message_id": message.id}})
+            # Send embed to vendor channel
+            rotation_collection = self.bot.database["destiny_rotation"]
+            entry = rotation_collection.find_one({"vendor_hash": 2190858386})
+            if entry is None:
+                rotation_collection.insert_one({"vendor_hash": 2190858386, "message_id": 0})
+            entry = rotation_collection.find_one({"vendor_hash": 2190858386})
+            if entry["message_id"] == 0:
+                channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
+                message = await channel.send(content="", embed=embed)
+                rotation_collection.update_one({"vendor_hash": 2190858386}, {"$set": {"message_id": message.id}})
+            else:
+                message_id = entry["message_id"]
+                channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
+                message = await channel.fetch_message(message_id)
+                await message.edit(content="", embed=embed)
+
+        elif date.today().weekday() == 4:
+            await xur_rotation(self.bot, self.logger)
         else:
-            message_id = entry["message_id"]
-            channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
-            message = await channel.fetch_message(message_id)
-            await message.edit(content="", embed=embed)
+            await xur_rotation(self.bot, self.logger)
+
+        # Delete previous emojis
+        emoji_collection = self.bot.database["emojis"]
+        for entry in emoji_collection.find({"vendor_hash": {"$in": [2190858386]}}):
+            emoji_id = entry["emoji_id"]
+            guild_id = entry["guild_id"]
+            emoji =  await self.bot.get_guild(guild_id).fetch_emoji(emoji_id)
+            await self.bot.get_guild(guild_id).delete_emoji(emoji)
+            emoji_collection.delete_one({"emoji_id": emoji_id})
+            self.logger.debug("Deleted emoji %s from guild %s", emoji.name, guild_id)
+        self.logger.debug("Done deleting emojis")
 
 def setup(bot) -> None:
     bot.add_cog(Rotations(bot))

@@ -13,7 +13,6 @@ from ehrenbot import Ehrenbot
 from ehrenbot.utils.exceptions import (BungieMaintenance,
                                        DestinyVendorNotFound, NoBungieResponse)
 
-
 async def check_vendors(bot: Ehrenbot) -> str:
     discord_id = bot.ADMIN_DISCORD_ID
     token_collection = bot.database["destiny_tokens"]
@@ -368,9 +367,6 @@ async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
 
 async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> discord.Embed:
     match vendor_hash:
-        case 2190858386:
-            bot.vendor_guild_id = 1057711135668850688
-            embed = await xur_embed(bot)
         case 672118013:
             bot.vendor_guild_id = 1057709724843397282
             embed = await banshee_embed(bot)
@@ -394,7 +390,7 @@ async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         item_hash = weapons[weapon]["item_hash"]
         item_name = weapons[weapon]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=inventory_item_collection, vendor_hash=672118013)
+                                              collection=inventory_item_collection, vendor_hash=vendor_hash)
         weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return weapon_string
 
@@ -409,7 +405,7 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
         item_hash = armor[armor_piece]["item_hash"]
         item_name = armor[armor_piece]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=inventory_item_collection, vendor_hash=672118013)
+                                              collection=inventory_item_collection, vendor_hash=vendor_hash)
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return armor_string
 
@@ -422,7 +418,7 @@ async def mod_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         item_hash = mods[mod]["item_hash"]
         item_name = mods[mod]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=inventory_item_collection, vendor_hash=672118013)
+                                              collection=inventory_item_collection, vendor_hash=vendor_hash)
         mod_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return mod_string
 
@@ -451,19 +447,3 @@ async def ada_embed(bot: Ehrenbot) -> discord.Embed:
     hunter_string = await armor_embed_field(bot, vendor_hash, "Hunter")
     embed.add_field(name="Hunter", value=hunter_string, inline=False)
     return embed
-
-async def xur_embed(bot: Ehrenbot) -> discord.Embed:
-    embed = discord.Embed(title="Xûr", description="Xûr is a vendor who sells exotic weapons, armor.", color=0xcdad36)
-    vendor_hash = 2190858386
-    embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
-    embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
-    warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")
-    embed.add_field(name="Warlock", value=warlock_string, inline=True)
-    titan_string = await armor_embed_field(bot, vendor_hash, "Titan")
-    embed.add_field(name="Titan", value=titan_string, inline=True)
-    hunter_string = await armor_embed_field(bot, vendor_hash, "Hunter")
-    embed.add_field(name="Hunter", value=hunter_string, inline=True)
-    weapon_string = await weapon_embed_field(bot, vendor_hash)
-    embed.add_field(name="Weapons", value=weapon_string, inline=False)
-    #return embed
-    return discord.Embed(title="Xûr, Agent of the Nine", description="Xûr is currently not in the tower")
