@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 
 from ehrenbot.bot import Ehrenbot
+from ehrenbot.utils.utils_registration import update_profile
 
 
 class Owner(commands.Cog):
@@ -72,6 +73,18 @@ class Owner(commands.Cog):
                 embed.color = discord.Color.green()
                 await message.edit(content="", embed=embed)
         await ctx.respond("Updated member hall")
+
+    @owner.command(name="update_profile_man", description="Update profile manually")
+    @commands.is_owner()
+    async def update_profile_manually(self, ctx: discord.ApplicationContext, discord_id: discord.Option(int)):
+        """ Update profile """
+        await ctx.defer()
+        if not discord_id:
+            discord_id = ctx.author.id
+        if await update_profile(self.bot, discord_id):
+            await ctx.respond("Updated profile")
+        else:
+            await ctx.respond("Profile error")
 
 def setup(bot) -> None:
     bot.add_cog(Owner(bot))
