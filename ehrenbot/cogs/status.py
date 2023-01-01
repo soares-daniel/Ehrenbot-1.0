@@ -37,7 +37,7 @@ class Status(commands.Cog):
 
     @tasks.loop(minutes=get_check_time())
     async def api_status(self):
-        channel: discord.TextChannel = discord.utils.get(self.bot.get_all_channels(), name="api-status")
+        channel: discord.TextChannel = discord.utils.get(self.bot.get_all_channels(), name="⚙｜api-status")
         if channel is None:
             return
 
