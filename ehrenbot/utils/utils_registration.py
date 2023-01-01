@@ -25,7 +25,7 @@ async def check_profile_endpoints(bot: Ehrenbot):
 
 async def setup_profile(bot: Ehrenbot, discord_id: int, membership_id: int) -> None:
     profile_collection = bot.database["members"]
-    with open("ehrenbot/data/guardian_template.json", "r", encoding="utf-8") as file:
+    with open("data/guardian_template.json", "r", encoding="utf-8") as file:
         guardian_template = json.load(file)
     profile_collection.insert_one({"discord_id": discord_id, "profile": guardian_template, "membership_id": membership_id})
 
