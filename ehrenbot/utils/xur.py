@@ -18,6 +18,7 @@ async def xur_rotation(bot: Ehrenbot, logger: logging.Logger):
         logger.error("Failed to fetch vendor sales for vendor %s", vendor_hash)
         return
     bot.vendor_guild_id = 1057711135668850688
+    #bot.vendor_guild_id = 1057709724843397282
     embed = await xur_embed(bot)
     # Set footer
     current_time = datetime.datetime.now(datetime.timezone.utc)
@@ -46,7 +47,7 @@ async def exotic_armor_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         item_name = armor[item]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
                                               collection=intenvory_item_collection, vendor_hash=vendor_hash)
-        exotic_armor_string += f"<{emoji.name}:{emoji.id}> {item_name}\n"
+        exotic_armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return exotic_armor_string
 
 async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
@@ -62,7 +63,7 @@ async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         item_name = weapons[item]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
                                               collection=intenvory_item_collection, vendor_hash=vendor_hash)
-        exotic_weapon_string += f"<{emoji.name}:{emoji.id}> {item_name}\n"
+        exotic_weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return exotic_weapon_string
 
 async def xur_embed(bot: Ehrenbot) -> discord.Embed:
@@ -75,11 +76,13 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
     exotics_armor_string = await exotic_armor_embed_field(bot=bot, vendor_hash=vendor_hash)
     embed.add_field(name="Exotic Armor", value=exotics_armor_string, inline=True)
     weapons_string = await weapon_embed_field(bot=bot, vendor_hash=vendor_hash)
-    embed.add_field(name="Weapons", value=weapons_string, inline=False)
-    warlock_armor_string = await armor_embed_field(bot=bot, vendor_hash=vendor_hash, category="warlock_armor")
+    embed.addField('\u200b', '\u200b')
+    embed.add_field(name="Weapons", value=weapons_string, inline=True)
+    warlock_armor_string = await armor_embed_field(bot=bot, vendor_hash=vendor_hash, category="Warlock")
     embed.add_field(name="Warlock Armor", value=warlock_armor_string, inline=True)
-    titan_armor_string = await armor_embed_field(bot=bot, vendor_hash=vendor_hash, category="titan_armor")
-    embed.add_field(name="Titan Armor", value=titan_armor_string, inline=False)
-    hunter_armor_string = await armor_embed_field(bot=bot, vendor_hash=vendor_hash, category="hunter_armor")
+    titan_armor_string = await armor_embed_field(bot=bot, vendor_hash=vendor_hash, category="Titan")
+    embed.addField('\u200b', '\u200b')
+    embed.add_field(name="Titan Armor", value=titan_armor_string, inline=True)
+    hunter_armor_string = await armor_embed_field(bot=bot, vendor_hash=vendor_hash, category="Hunter")
     embed.add_field(name="Hunter Armor", value=hunter_armor_string, inline=True)
     return embed

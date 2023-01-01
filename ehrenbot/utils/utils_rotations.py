@@ -387,6 +387,8 @@ async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     weapons = daily_rotation["weapons"]
     weapon_string = ""
     for weapon in weapons:
+        if weapons[weapon]["definition"]["inventory"]["tierType"] == 6:
+            continue
         item_hash = weapons[weapon]["item_hash"]
         item_name = weapons[weapon]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
@@ -401,6 +403,8 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
     armor_string = ""
     for armor_piece in armor:
         if armor[armor_piece]["class"] != category:
+            continue
+        if armor[armor_piece]["definition"]["inventory"]["tierType"] == 6:
             continue
         item_hash = armor[armor_piece]["item_hash"]
         item_name = armor[armor_piece]["definition"]["displayProperties"]["name"]

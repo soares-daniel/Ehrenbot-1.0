@@ -1,4 +1,5 @@
 # pylint: disable=E0211,E1121,C0206,E1123
+import asyncio
 import logging
 from datetime import date, datetime, time, timezone
 
@@ -63,6 +64,8 @@ class Rotations(commands.Cog):
     @tasks.loop(count=1)
     async def banshee_ada(self):
         await banshee_ada_rotation(self.bot, self.logger)
+
+        await asyncio.sleep(3600)
         # Delete previous emojis
         emoji_collection = self.bot.database["emojis"]
         for entry in emoji_collection.find({"vendor_hash": {"$in": [672118013, 350061650]}}):
@@ -106,6 +109,7 @@ class Rotations(commands.Cog):
         else:
             await xur_rotation(self.bot, self.logger)
 
+        await asyncio.sleep(3600)
         # Delete previous emojis
         emoji_collection = self.bot.database["emojis"]
         for entry in emoji_collection.find({"vendor_hash": {"$in": [2190858386]}}):
