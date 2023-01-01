@@ -82,8 +82,8 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
         profile["cross_save_override"] = data["userInfo"].get("crossSaveOverride", 0)
         profile["applicable_membership_types"] = data["userInfo"].get("applicableMembershipTypes", [])
         profile["is_public"] = data["userInfo"].get("isPublic", False)
-        profile["date_last_played"] = data["dateLastPlayed", ""]
-        profile["character_ids"] = data["characterIds", []]
+        profile["date_last_played"] = data["dateLastPlayed"]
+        profile["character_ids"] = data["characterIds"]
 
         group_v2_endpoints = bot.destiny_client.group_v2
         response = await group_v2_endpoints.GetGroupsForMember(membership_type=profile["membership_type"],
