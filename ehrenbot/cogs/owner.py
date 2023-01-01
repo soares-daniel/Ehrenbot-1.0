@@ -54,7 +54,7 @@ class Owner(commands.Cog):
             destiny_profile = entry["profile"]
             membership_id = entry["membershipId"]
             members_collection.update_one({"discord_id": discord_id}, {"$set": {"destiny_profile": destiny_profile, "membership_id": membership_id}})
-        await ctx.respond("Migrated destiny profile to members collection")
+        await ctx.respond("Migrated destiny profile to members collection", delete_after=5)
 
     @owner.command(name="update_memberhall", description="Migrate destiny profile to members collection")
     @commands.is_owner()
@@ -72,7 +72,7 @@ class Owner(commands.Cog):
                 embed.add_field(name="Bungie.Net", value=f"\u200b{name}", inline=False)
                 embed.color = discord.Color.green()
                 await message.edit(content="", embed=embed)
-        await ctx.respond("Updated member hall")
+        await ctx.respond("Updated member hall", delete_after=5)
 
     @owner.command(name="update_profile_man", description="Update profile manually")
     @commands.is_owner()
@@ -91,7 +91,7 @@ class Owner(commands.Cog):
             if "destiny_profile" in entry:
                 await setup_profile(self.bot, entry["discord_id"], entry["membership_id"])
                 await update_profile(self.bot, entry["discord_id"])
-        await ctx.respond("Updated profile/s")
+        await ctx.respond("Updated profile/s", delete_after=5)
 
 def setup(bot) -> None:
     bot.add_cog(Owner(bot))
