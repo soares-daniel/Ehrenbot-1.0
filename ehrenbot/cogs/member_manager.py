@@ -81,7 +81,14 @@ class MemberManager(commands.Cog):
         else:
             embed.color = discord.Color.blurple()
         # Add member to member hall and database
-        member_hall = discord.utils.get(member.guild.channels, name="member-hall")
+        member_hall: discord.TextChannel = discord.utils.get(member.guild.channels, name="member-hall")
+
+        # Prevent duplicate messages on join spam
+        last_message = await member_hall.history(limit=1).flatten()
+        last_message_embed = last_message[0].embeds[0]
+        if last_message_embed.title == embed.title:
+            return
+        
         message: discord.Message = await member_hall.send(embed=embed)
         message_id = message.id
         member_collection = self.bot.database["members"]
