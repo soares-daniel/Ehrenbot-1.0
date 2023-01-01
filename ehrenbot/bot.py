@@ -48,7 +48,7 @@ class Ehrenbot(commands.Bot):
         self.destiny_client = DestinyClient(BUNGIE_API_KEY, BUNGIE_CLIENT_ID,
                                             BUNGIE_CLIENT_SECRET, REDIRECT_URI)
         # Translator
-        self.agent = Agent(translate_all=True)
+        self.agent = Agent(translate_messages=True)
 
         # Misc
         self.DEBUG = DEBUG
