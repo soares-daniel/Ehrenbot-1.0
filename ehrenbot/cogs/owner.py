@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from ehrenbot.bot import Ehrenbot
-from ehrenbot.utils.utils_registration import update_profile
+from ehrenbot.utils.utils_registration import setup_profile, update_profile
 
 
 class Owner(commands.Cog):
@@ -79,12 +79,19 @@ class Owner(commands.Cog):
     async def update_profile_manually(self, ctx: discord.ApplicationContext, discord_id: int = None):
         """ Update profile """
         await ctx.defer()
-        if not discord_id:
-            discord_id = ctx.author.id
-        if await update_profile(self.bot, discord_id):
-            await ctx.respond("Updated profile")
+        if discord_id is None:
+            members_collection = self.bot.database["members"]
+            for entry in members_collection.find():
+                if "destiny_profile" in entry:
+                    await setup_profile(self.bot, entry["discord_id"], entry["membership_id"])
+                    await update_profile(self.bot, entry["discord_id"])
         else:
-            await ctx.respond("Profile error")
+            members_collection = self.bot.database["members"]
+            entry = members_collection.find_one({"discord_id": discord_id})
+            if "destiny_profile" in entry:
+                await setup_profile(self.bot, entry["discord_id"], entry["membership_id"])
+                await update_profile(self.bot, entry["discord_id"])
+        await ctx.respond("Updated profile/s")
 
 def setup(bot) -> None:
     bot.add_cog(Owner(bot))
