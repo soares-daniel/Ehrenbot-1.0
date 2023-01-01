@@ -68,7 +68,7 @@ class Owner(commands.Cog):
                 message = await channel.fetch_message(message_id)
                 embed = message.embeds[0]
                 name = entry["destiny_profile"]["uniqueName"] if "uniqueName" in entry["destiny_profile"] else entry["destiny_profile"]["displayName"]
-                embed.add_field(name="Bungie.Net", value=f"{name}", inline=False)
+                embed.add_field(name="Bungie.Net", value=f"\u200b{name}", inline=False)
                 embed.color = discord.Color.green()
                 await message.edit(content="", embed=embed)
         await ctx.respond("Updated member hall")
