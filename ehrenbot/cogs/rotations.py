@@ -42,10 +42,10 @@ class Rotations(commands.Cog):
         guild = self.bot.get_guild(guild_id)
         for emoji in guild.emojis:
             await guild.delete_emoji(emoji)
-        await ctx.respond(f"Deleted all emojis from guild {guild_id}")
+        await ctx.respond(f"Deleted all emojis from guild {guild_id}", delete_after=5)
 
     # ! if already in database, retry again in 5 minutes
-    @tasks.loop(hours=1)
+    @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
         await banshee_ada_rotation(self.bot, self.logger)
         # Delete previous emojis
@@ -65,7 +65,7 @@ class Rotations(commands.Cog):
         if not await loop_check(self.bot):
             self.daily_vendor_rotation.cancel()
 
-    @tasks.loop(hours=1)
+    @tasks.loop(time=get_reset_time())
     async def xur_rotation(self):
         self.logger.debug("Starting Xur rotation...")
         weekdays = [0, 1, 2, 3]

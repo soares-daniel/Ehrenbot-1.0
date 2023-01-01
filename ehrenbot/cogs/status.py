@@ -1,3 +1,4 @@
+# pylint: disable=E0211,E1121
 import logging
 from datetime import datetime
 
@@ -12,6 +13,7 @@ from ehrenbot.utils.utils_status import (check_api_status,
 
 
 class Status(commands.Cog):
+
     def __init__(self, bot) -> None:
         self.bot: Ehrenbot = bot
         self.logger = logging.getLogger(__name__)
@@ -23,7 +25,17 @@ class Status(commands.Cog):
     def cog_unload(self) -> None:
         self.api_status.cancel()
 
-    @tasks.loop(minutes=1)
+    # If time is between 16h45 and 17h30 utc, change minutes to 1
+    def get_check_time() -> float:
+        now = datetime.utcnow()
+        if now.hour == 16 and now.minute >= 45:
+            return 1.
+        if now.hour == 17 and now.minute <= 30:
+            return 1.
+        else:
+            return 10.
+
+    @tasks.loop(minutes=get_check_time())
     async def api_status(self):
         channel: discord.TextChannel = discord.utils.get(self.bot.get_all_channels(), name="api-status")
         if channel is None:
@@ -50,7 +62,6 @@ class Status(commands.Cog):
             time = datetime.utcnow()
         embed.set_footer(text=f"Last updated: {time.strftime('%d/%m/%Y %H:%M:%S')} UTC")
         embed.set_image(url="https://www.bungie.net/pubassets/pkgs/157/157031/D2_DPS_Gif.gif")
-        embed.set_thumbnail(url="https://img2.freepng.fr/20180411/yzw/kisspng-destiny-2-halo-3-odst-bungie-crest-5ace71b9e962c7.894821781523478969956.jpg")
 
         if channel.last_message_id is None:
             await channel.send(embed=embed)

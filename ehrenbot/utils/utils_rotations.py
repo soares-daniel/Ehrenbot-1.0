@@ -43,11 +43,9 @@ async def loop_check(bot: Ehrenbot) -> bool:
         return False
     if status == "Maintenance":
         while status == "Maintenance":
-            bot.logger.info("Bungie API is in maintenance mode, retrying in 5 minutes")
+            bot.logger.warning("Bungie API is in maintenance mode, retrying in 5 minutes")
             await asyncio.sleep(300)
             status = await check_vendors(bot)
-    if status == "OK":
-        bot.logger.info("Bungie API is ready for daily rotation")
     return True
 
 async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
@@ -108,7 +106,7 @@ async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) ->
         logger.error("Error: %s", ex)
         return False
     else:
-        logger.info("%d sales modified, processing...", vendor_hash)
+        logger.debug("%d sales modified, processing...", vendor_hash)
         return await process_vendor_sales(bot=bot, logger=logger, vendor_hash=vendor_hash, data=modified_data)
 
 async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, data: dict) -> bool:
@@ -188,7 +186,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         destiny_rotation.update_one({"vendor_hash": vendor_hash},
                                     {"$set": {"date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
                             upsert=True)
-        logger.info("Vendor sales processed")
+        logger.debug("Vendor sales processed")
         return True
 
 async def process_item_sockets(bot: Ehrenbot, item_template: dict, item_sockets) -> dict:
@@ -240,7 +238,7 @@ async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
     except Exception as ex:
         logger.exception("Error getting vendor info: %s", ex)
     else:
-        logger.info("%d info updated", vendor_hash)
+        logger.debug("%d info updated", vendor_hash)
         return True
 
 async def get_missing_mods(bot: Ehrenbot, logger: Logger, discord_id: int) -> bool:
@@ -362,7 +360,7 @@ async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
         logger.error("%s", ex)
         return None
     else:
-        logger.info("Emoji created for %d", item_hash)
+        logger.debug("Emoji created for %d", item_hash)
         emoji_collection = bot.database["emojis"]
         emoji_collection.insert_one({"emoji_id": emoji.id, "guild_id": bot.vendor_guild_id, "vendor_hash": vendor_hash})
         return emoji

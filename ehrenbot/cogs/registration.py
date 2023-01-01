@@ -79,12 +79,15 @@ class Registration(commands.Cog):
 
     @tasks.loop(hours=1)
     async def update_tokens(self):
+        self.logger.debug("Updating tokens...")
         token_collection = self.bot.database["destiny_tokens"]
         oauth = self.bot.destiny_client.oauth
         for token in token_collection.find():
             new_token = await oauth.refresh_token(token["token"])
             if new_token:
                 token_collection.update_one({"discord_id": token["discord_id"]}, {"$set": {"token": new_token}})
+                self.logger.debug("Updated token for %s", token["discord_id"])
+        self.logger.info("Tokens updated.")
 
     @update_tokens.before_loop
     async def before_update_tokens(self):

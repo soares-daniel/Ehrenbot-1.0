@@ -18,7 +18,7 @@ class Owner(commands.Cog):
     owner = discord.SlashCommandGroup(name="owner", description="Owner commands.")
 
     def get_cogs(self) -> list:
-        return [cog.replace(".py", "") for cog in os.listdir("ehrenbot/cogs") if cog.endswith(".py")]
+        return [cog.replace(".py", "") for cog in os.listdir("ehrenbot/cogs") if cog.endswith(".py") and not cog.startswith("_")]
 
     @owner.command(name="reload", description="Reload a cog.")
     @commands.is_owner()
