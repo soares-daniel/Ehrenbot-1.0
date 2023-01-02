@@ -88,6 +88,7 @@ class Owner(commands.Cog):
                     await setup_profile(self.bot, token["discord_id"], token["membership_id"])
                     await update_profile(self.bot, entry["discord_id"])
         else:
+            int(discord_id)
             members_collection = self.bot.database["members"]
             entry = members_collection.find_one({"discord_id": discord_id})
             if entry is None:
@@ -102,18 +103,6 @@ class Owner(commands.Cog):
                 await ctx.respond("Token not found", delete_after=5)
                 return
         await ctx.respond("Updated profile/s", delete_after=5)
-
-    @owner.command(name="update_tokens", description="Update token")
-    @commands.is_owner()
-    async def update_tokens(self, ctx: discord.ApplicationContext):
-        """ Update token """
-        await ctx.defer()
-        token_collection = self.bot.database["destiny_tokens"]
-        for entry in token_collection.find():
-            if entry.get("membership_id") is None:
-                membership_id = entry["token"]["membership_id"]
-                token_collection.update_one({"discord_id": entry["discord_id"]}, {"$set": {"membership_id": membership_id}})
-        await ctx.respond("Updated tokens", delete_after=5)
 
 def setup(bot) -> None:
     bot.add_cog(Owner(bot))
