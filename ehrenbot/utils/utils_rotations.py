@@ -170,7 +170,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         return False
     else:
         destiny_rotation = bot.database["destiny_rotation"]
-        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"vendor": data["vendor"]}}, upsert=True)
+        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"vendor": data["vendor"]["data"]}}, upsert=True)
         if armor:
             destiny_rotation.update_one({"vendor_hash": vendor_hash},
                                         {"$set": {"armor": armor}},
