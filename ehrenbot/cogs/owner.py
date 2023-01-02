@@ -82,8 +82,10 @@ class Owner(commands.Cog):
         if discord_id is None:
             members_collection = self.bot.database["members"]
             for entry in members_collection.find():
-                if "destiny_profile" in entry:
-                    await setup_profile(self.bot, entry["discord_id"], entry["membership_id"])
+                token_collection = self.bot.database["destiny_tokens"]
+                token = token_collection.find_one({"discord_id": discord_id})
+                if token is not None:
+                    await setup_profile(self.bot, token["discord_id"], token["membership_id"])
                     await update_profile(self.bot, entry["discord_id"])
         else:
             members_collection = self.bot.database["members"]
