@@ -76,7 +76,7 @@ class Owner(commands.Cog):
 
     @owner.command(name="update_profile_man", description="Update profile manually")
     @commands.is_owner()
-    async def update_profile_manually(self, ctx: discord.ApplicationContext, discord_id: int = None):
+    async def update_profile_manually(self, ctx: discord.ApplicationContext, discord_id = None):
         """ Update profile """
         await ctx.defer()
         if discord_id is None:

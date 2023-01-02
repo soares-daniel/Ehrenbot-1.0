@@ -66,7 +66,12 @@ async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     return exotic_weapon_string
 
 async def xur_embed(bot: Ehrenbot) -> discord.Embed:
-    embed = discord.Embed(title="Xûr", description="Xûr is a vendor who sells exotic weapons, armor.", color=0xcdad36)
+    xur = bot.database["destiny_rotation"].find_one({"vendor_hash": 2190858386})
+    vendor_location_index = xur["vendor"]["vendorLocationIndex"]
+    vendor_locations = {0: "The Last City", 1: "European Dead Zone", 2: "Arcadian Valley"}
+    vendor_location = vendor_locations[vendor_location_index]
+    embed = discord.Embed(title="Xûr",
+                          description=f"Xûr is a vendor who sells exotic weapons, armor. \nCurrent location: **{vendor_location}**", color=0xcdad36)
     vendor_hash = 2190858386
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
     embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")

@@ -61,7 +61,7 @@ async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
                                             destiny_membership_id=profile["destiny_membership_id"],
                                             membership_type=profile["membership_type"],
                                             vendor_hash=vendor_hash,
-                                            components=[402,304,305])
+                                            components=[400,402,304,305])
         if not response:
             raise NoBungieResponse
         if response["ErrorCode"] == 5:
@@ -83,7 +83,7 @@ async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) ->
         destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"armor": [], "weapons": []}}, upsert=True)
         data = await get_vendor_data(bot=bot, vendor_hash=vendor_hash)
 
-        modified_data = {"sales": {}, "stats": {}, "sockets": {}}
+        modified_data = {"vendor": {}, "sales": {}, "stats": {}, "sockets": {}}
         for character_id in data:
             sales = data[character_id]["sales"]["data"]
             stats = data[character_id]["itemComponents"]["stats"]["data"]
@@ -91,7 +91,7 @@ async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) ->
             modified_data["sales"].update(sales)
             modified_data["stats"].update(stats)
             modified_data["sockets"].update(sockets)
-
+        modified_data["vendor"] = data[list(data.keys())[0]]["vendor"]
     except NoBungieResponse:
         logger.error("No response from Bungie API")
         return False
@@ -170,6 +170,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         return False
     else:
         destiny_rotation = bot.database["destiny_rotation"]
+        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"vendor": data["vendor"]}}, upsert=True)
         if armor:
             destiny_rotation.update_one({"vendor_hash": vendor_hash},
                                         {"$set": {"armor": armor}},

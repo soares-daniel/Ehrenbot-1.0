@@ -26,7 +26,7 @@ class Registration(commands.Cog):
     @commands.guild_only()
     async def register(self, ctx: discord.ApplicationContext):
         """ Link your Bungie account with your Discord account """
-        token_collection = self.bot.database["tokens"]
+        token_collection = self.bot.database["destiny_tokens"]
         if token_collection.find_one({"discord_id": ctx.author.id}):
             await ctx.respond("You are already registered.", ephemeral=True, delete_after=10)
             return
