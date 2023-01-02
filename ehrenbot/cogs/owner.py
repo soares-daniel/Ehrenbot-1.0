@@ -68,7 +68,7 @@ class Owner(commands.Cog):
                 channel: discord.TextChannel = ctx.guild.get_channel(entry["channel_id"])
                 message = await channel.fetch_message(message_id)
                 embed = message.embeds[0]
-                name = entry["destiny_profile"]["uniqueName"]
+                name = entry["destiny_profile"]["unique_name"]
                 embed.add_field(name="Bungie.Net", value=f"\u200b{name}", inline=False)
                 embed.color = discord.Color.green()
                 await message.edit(content="", embed=embed)
