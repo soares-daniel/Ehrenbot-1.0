@@ -81,26 +81,23 @@ class Owner(commands.Cog):
         await ctx.defer()
         if discord_id is None:
             members_collection = self.bot.database["members"]
-            for entry in members_collection.find():
-                token_collection = self.bot.database["destiny_tokens"]
-                token = token_collection.find_one({"discord_id": discord_id})
-                if token is not None:
+            token_collection = self.bot.database["destiny_tokens"]
+            for token in token_collection.find():
+                entry = members_collection.find_one({"discord_id": token["discord_id"]})
+                if entry:
                     await setup_profile(self.bot, token["discord_id"], token["membership_id"])
                     await update_profile(self.bot, entry["discord_id"])
         else:
             int(discord_id)
             members_collection = self.bot.database["members"]
-            entry = members_collection.find_one({"discord_id": discord_id})
-            if entry is None:
-                await ctx.respond("Member not found", delete_after=5)
-                return
             token_collection = self.bot.database["destiny_tokens"]
             token = token_collection.find_one({"discord_id": discord_id})
-            if token is not None:
+            entry = members_collection.find_one({"discord_id": discord_id})
+            if entry:
                 await setup_profile(self.bot, token["discord_id"], token["membership_id"])
                 await update_profile(self.bot, entry["discord_id"])
             else:
-                await ctx.respond("Token not found", delete_after=5)
+                await ctx.respond("No profile found", delete_after=5)
                 return
         await ctx.respond("Updated profile/s", delete_after=5)
 
