@@ -88,6 +88,9 @@ class Owner(commands.Cog):
         else:
             members_collection = self.bot.database["members"]
             entry = members_collection.find_one({"discord_id": discord_id})
+            if entry is None:
+                await ctx.respond("Member not found", delete_after=5)
+                return
             if "destiny_profile" in entry:
                 await setup_profile(self.bot, entry["discord_id"], entry["membership_id"])
                 await update_profile(self.bot, entry["discord_id"])

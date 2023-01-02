@@ -27,7 +27,8 @@ async def setup_profile(bot: Ehrenbot, discord_id: int, membership_id: int) -> N
     profile_collection = bot.database["members"]
     with open("data/guardian_template.json", "r", encoding="utf-8") as file:
         guardian_template = json.load(file)
-    profile_collection.insert_one({"discord_id": discord_id, "profile": guardian_template, "membership_id": membership_id})
+    profile_collection.update_one({"discord_id": discord_id},
+                                  {"$set": {"destiny_profile": guardian_template, "membership_id": membership_id}}, upsert=True)
 
 async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
     token_collection = bot.database["destiny_tokens"]
