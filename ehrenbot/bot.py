@@ -60,8 +60,7 @@ class Ehrenbot(commands.Bot):
             self.lux_invite_code = "QhGzKJSs"
         else:
             self.GUILD_ID = self.MAIN_GUILD_ID
-            self.destiny_invite_code = "YJmhrdcHnX"
-            self.lux_invite_code = "dzwf8PN2xs"
+            self.destiny_invite_code = "tHQWSPuFVW"
         self.ADMIN_DISCORD_ID = 279725513323315200
         self.BUNGIE_BASE_URL = "https://www.bungie.net/"
         self.RESET_TIME = time(hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
