@@ -4,11 +4,12 @@ from logging import Logger
 
 import discord
 from discord.ext import commands
+import requests
 
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.utils_ticket import (create_ticket_embed,
                                          set_ticket_status, sync_ticket)
-
+from settings import BUNGIE_API_KEY
 
 class Ticket(commands.Cog):
     def __init__(self, bot) -> None:
@@ -313,13 +314,27 @@ class ClanRequestView(discord.ui.View):
 
         user_membership_id: int = user_profile["destiny_membership_id"]
         user_membership_type: int = user_profile["membership_type"]
-        response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
-            token=admin_token,
-            group_id=admin_group_id,
-            membership_type=user_membership_type,
-            membership_id=user_membership_id,
-            message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
-        )
+
+            # FIXME: This is not working
+            # ! currently synchronous
+        url = f"https://www.bungie.net/Platform/GroupV2/{admin_group_id}/Members/IndividualInvite/{user_membership_type}/{user_membership_id}/"
+        payload = {
+            "GroupApplicationRequest": {
+                "message": f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen.",
+            }
+        }
+        headers = {
+            "X-API-Key": BUNGIE_API_KEY,
+            "Authorization": f"Bearer {admin_token['access_token']}"
+        }
+        response = requests.post(url=url, json=payload, headers=headers)
+        # response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
+        #     token=admin_token,
+        #     group_id=admin_group_id,
+        #     membership_type=user_membership_type,
+        #     membership_id=user_membership_id,
+        #     message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
+        # )
         if response is None:
             await interaction.followup.send("Invite failed", ephemeral=True, delete_after=5)
             self.logger.warn("Invite failed for %d", discord_id)
