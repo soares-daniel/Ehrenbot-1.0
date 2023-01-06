@@ -107,7 +107,7 @@ class Rotations(commands.Cog):
         elif date.today().weekday() == 4:
             await xur_rotation(self.bot, self.logger)
         else:
-            await xur_rotation(self.bot, self.logger)
+            return
 
         await asyncio.sleep(3600)
         # Delete previous emojis
