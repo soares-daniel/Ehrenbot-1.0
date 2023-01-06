@@ -336,6 +336,7 @@ class ClanRequestView(discord.ui.View):
         #     membership_id=user_membership_id,
         #     message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
         # )
+        response = response.json()
         if response is None:
             await interaction.followup.send("Invite failed", ephemeral=True, delete_after=5)
             self.logger.warn("Invite failed for %d", discord_id)
