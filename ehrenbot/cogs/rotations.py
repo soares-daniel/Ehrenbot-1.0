@@ -24,7 +24,7 @@ class Rotations(commands.Cog):
         self.daily_vendor_rotation.cancel()
 
     def get_reset_time() -> time:
-        return time(hour=17, minute=0, second=0, tzinfo=timezone.utc)
+        return time(hour=18, minute=0, second=0, tzinfo=timezone.utc)
 
     rotation = discord.SlashCommandGroup(name="rotation", description="Commands to start Destiny 2 vendor rotations manually.")
 
