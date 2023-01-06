@@ -328,7 +328,7 @@ class ClanRequestView(discord.ui.View):
             "X-API-Key": BUNGIE_API_KEY,
             "Authorization": f"Bearer {admin_token['access_token']}"
         }
-        response = requests.post(url=url, data=payload, headers=headers)
+        response = requests.post(url=url, json=payload, headers=headers)
         # response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
         #     token=admin_token,
         #     group_id=admin_group_id,
