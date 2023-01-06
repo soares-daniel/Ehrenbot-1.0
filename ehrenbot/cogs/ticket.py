@@ -319,13 +319,17 @@ class ClanRequestView(discord.ui.View):
             # FIXME: This is not working
             # ! currently synchronous
         url = f"https://www.bungie.net/Platform/GroupV2/{admin_group_id}/Members/IndividualInvite/{user_membership_type}/{user_membership_id}/"
-        payload = { "message": "" }
+        payload = {
+            "GroupApplicationRequest": {
+                "message": "",
+            }
+        }
 
         headers = {
             "X-API-Key": BUNGIE_API_KEY,
             "Authorization": f"Bearer {admin_token['access_token']}"
         }
-        response = requests.post(url=url, body=payload, headers=headers)
+        response = requests.post(url=url, json=payload, headers=headers)
         # response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
         #     token=admin_token,
         #     group_id=admin_group_id,
