@@ -320,9 +320,8 @@ class ClanRequestView(discord.ui.View):
             # ! currently synchronous
         url = f"https://www.bungie.net/Platform/GroupV2/{admin_group_id}/Members/IndividualInvite/{user_membership_type}/{user_membership_id}/"
         payload = {
-            "GroupApplicationRequest": {
-                "message": "test",
-            }
+            "title": "",
+            "message": "Join our clan bro!"
         }
         headers = {
             "X-API-Key": BUNGIE_API_KEY,
