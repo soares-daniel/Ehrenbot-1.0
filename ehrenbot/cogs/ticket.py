@@ -3,13 +3,14 @@ import logging
 from logging import Logger
 
 import discord
-from discord.ext import commands
 import requests
+from discord.ext import commands
 
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.utils_ticket import (create_ticket_embed,
                                          set_ticket_status, sync_ticket)
 from settings import BUNGIE_API_KEY
+
 
 class Ticket(commands.Cog):
     def __init__(self, bot) -> None:

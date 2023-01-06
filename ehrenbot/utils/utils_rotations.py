@@ -13,6 +13,7 @@ from ehrenbot import Ehrenbot
 from ehrenbot.utils.exceptions import (BungieMaintenance,
                                        DestinyVendorNotFound, NoBungieResponse)
 
+
 async def check_vendors(bot: Ehrenbot) -> str:
     discord_id = bot.ADMIN_DISCORD_ID
     token_collection = bot.database["destiny_tokens"]

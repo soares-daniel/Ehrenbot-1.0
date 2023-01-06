@@ -16,7 +16,6 @@ def create_ticket_embed(ticket: dict, author: Union[discord.Member, discord.User
     embed.add_field(name="Description", value=ticket["description"], inline=False)
     return embed
 
-
 async def set_ticket_status(bot: Ehrenbot, embed: discord.Embed, status: str) -> discord.Embed:
     status_color = {
         "Open": discord.Color.gold(),
@@ -35,7 +34,6 @@ async def set_ticket_status(bot: Ehrenbot, embed: discord.Embed, status: str) ->
     await user.send(f"Your ticket status has been updated to **{status}**", delete_after=3600)
     return embed
 
-
 def get_ticket_entry(bot: Ehrenbot, logger: Logger, ticket_id: int) -> dict:
     try:
         ticket_collection = bot.database["destiny_tickets"]
@@ -46,7 +44,6 @@ def get_ticket_entry(bot: Ehrenbot, logger: Logger, ticket_id: int) -> dict:
     except Exception as ex:
         logger.error("%s", ex)
         return
-
 
 # Syncs the ticket embeds and updates the database
 async def sync_ticket(bot: Ehrenbot, logger: Logger, interaction: discord.Interaction, ticket_id: int, embed: discord.Embed) -> None:

@@ -1,9 +1,14 @@
 import datetime
 import logging
+
 import discord
 
 from ehrenbot.bot import Ehrenbot
-from ehrenbot.utils.utils_rotations import armor_embed_field, create_emoji_from_entry, fetch_vendor_sales, weapon_embed_field
+from ehrenbot.utils.utils_rotations import (armor_embed_field,
+                                            create_emoji_from_entry,
+                                            fetch_vendor_sales,
+                                            weapon_embed_field)
+
 
 async def xur_rotation(bot: Ehrenbot, logger: logging.Logger):
     channel: discord.TextChannel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
