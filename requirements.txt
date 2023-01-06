@@ -26,6 +26,7 @@ pep517
 py-cord
 pymongo
 python-dotenv
+requests
 rfc3986
 sniffio
 tomli

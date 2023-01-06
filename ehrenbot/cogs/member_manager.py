@@ -83,6 +83,7 @@ class MemberManager(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         """ Add a member to the member hall and database """
+        print(f"{member.display_name} joined the server.")
         self.logger.info("Member %s joined the server.", member.display_name)
         embed = discord.Embed(title=f"{member.display_name}")
         embed.set_thumbnail(url=member.display_avatar.url)
@@ -126,6 +127,7 @@ class MemberManager(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         """ Remove a member from the member hall and database """
+        print(f"{member.display_name} left the server.")
         self.logger.info("Member %s left the server.", member.display_name)
         member_collection = self.bot.database["members"]
         entries = member_collection.find({"discord_id": member.id})
