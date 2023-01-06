@@ -63,7 +63,7 @@ class Ehrenbot(commands.Bot):
             self.destiny_invite_code = "tHQWSPuFVW"
         self.ADMIN_DISCORD_ID = 279725513323315200
         self.BUNGIE_BASE_URL = "https://www.bungie.net/"
-        self.RESET_TIME = time(hour=18, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+        self.RESET_TIME = time(hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
         self.vendor_guild_id = 0
 
     async def on_ready(self) -> None:
