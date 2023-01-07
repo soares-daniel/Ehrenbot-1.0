@@ -315,29 +315,13 @@ class ClanRequestView(discord.ui.View):
 
         user_membership_id: int = user_profile["destiny_membership_id"]
         user_membership_type: int = user_profile["membership_type"]
-
-            # FIXME: This is not working
-            # ! currently synchronous
-        url = f"https://www.bungie.net/Platform/GroupV2/{admin_group_id}/Members/IndividualInvite/{user_membership_type}/{user_membership_id}/"
-        payload = {
-            "GroupApplicationRequest": {
-                "message": "",
-            }
-        }
-
-        headers = {
-            "X-API-Key": BUNGIE_API_KEY,
-            "Authorization": f"Bearer {admin_token['access_token']}"
-        }
-        response = requests.post(url=url, json=payload, headers=headers)
-        # response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
-        #     token=admin_token,
-        #     group_id=admin_group_id,
-        #     membership_type=user_membership_type,
-        #     membership_id=user_membership_id,
-        #     message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
-        # )
-        response = response.json()
+        response = await self.bot.destiny_client.group_v2.IndividualGroupInvite(
+            token=admin_token,
+            group_id=admin_group_id,
+            membership_type=user_membership_type,
+            membership_id=user_membership_id,
+            message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
+        )
         if response is None:
             await interaction.followup.send("Invite failed", ephemeral=True, delete_after=5)
             self.logger.warn("Invite failed for %d", discord_id)

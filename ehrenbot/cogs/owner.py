@@ -88,13 +88,13 @@ class Owner(commands.Cog):
                     await setup_profile(self.bot, token["discord_id"], token["membership_id"])
                     await update_profile(self.bot, entry["discord_id"])
         else:
-            int(discord_id)
+            discord_id = int(discord_id)
             members_collection = self.bot.database["members"]
             token_collection = self.bot.database["destiny_tokens"]
             token = token_collection.find_one({"discord_id": discord_id})
             entry = members_collection.find_one({"discord_id": discord_id})
             if entry:
-                await setup_profile(self.bot, token["discord_id"], token["membership_id"])
+                await setup_profile(self.bot, token["discord_id"], token["token"]["membership_id"])
                 await update_profile(self.bot, entry["discord_id"])
             else:
                 await ctx.respond("No profile found", delete_after=5)

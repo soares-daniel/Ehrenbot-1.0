@@ -24,11 +24,17 @@ async def check_profile_endpoints(bot: Ehrenbot):
         raise BungieAPIError(f"Could not get groups for member: {response['ErrorStatus']}")
 
 async def setup_profile(bot: Ehrenbot, discord_id: int, membership_id: int) -> None:
-    profile_collection = bot.database["members"]
-    with open("data/guardian_template.json", "r", encoding="utf-8") as file:
-        guardian_template = json.load(file)
-    profile_collection.update_one({"discord_id": discord_id},
-                                  {"$set": {"destiny_profile": guardian_template, "membership_id": membership_id}}, upsert=True)
+    try:
+        profile_collection = bot.database["members"]
+        with open("data/guardian_template.json", "r", encoding="utf-8") as file:
+            guardian_template = json.load(file)
+        profile_collection.update_one({"discord_id": discord_id},
+                                    {"$set": {"destiny_profile": guardian_template, "membership_id": membership_id}}, upsert=True)
+    except Exception as ex:
+        bot.logger.error("Could not setup profile for %d: %s", discord_id, ex)
+        return False
+    else:
+        return True
 
 async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
     token_collection = bot.database["destiny_tokens"]
