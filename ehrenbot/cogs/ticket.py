@@ -336,7 +336,7 @@ class ClanRequestView(discord.ui.View):
             message_id = ticket["admin_message_id"]
             channel: discord.TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
             message = await channel.fetch_message(message_id)
-            await message.edit(content="", embed=embed, view=None)
+            await message.delete()
         elif response["ErrorCode"] == 676:
             await interaction.followup.send("User is already in the clan", ephemeral=True, delete_after=5)
             self.logger.info("User %d is already in the clan", discord_id)
@@ -344,7 +344,7 @@ class ClanRequestView(discord.ui.View):
             message_id: int = ticket["admin_message_id"]
             channel: discord.TextChannel = discord.utils.get(interaction.guild.channels, name="📮｜admin-tickets")
             message = await channel.fetch_message(message_id)
-            await message.edit(embed=embed, view=None)
+            await message.delete()
         elif response["ErrorCode"] == 12:
             await interaction.followup.send("You lack the privileges to invite someone to the clan!", ephemeral=True, delete_after=5)
         else:
