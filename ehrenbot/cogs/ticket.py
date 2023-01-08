@@ -328,6 +328,8 @@ class ClanRequestView(discord.ui.View):
             await interaction.followup.send("User was invited", ephemeral=True, delete_after=5)
             user = self.bot.get_user(discord_id)
             await user.send("You were invited to the clan")
+            clan_role = discord.utils.get(interaction.guild.roles, name="Clan")
+            await user.add_roles(clan_role)
             self.logger.info("User %s was invited to Code Ehre", discord_id)
             ticket["ticket"]["status"] = "Closed"
             ticket_collection.update_one({"ticket_id": ticket_id}, {"$set": ticket})

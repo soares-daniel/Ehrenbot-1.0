@@ -66,7 +66,7 @@ class Registration(commands.Cog):
                     await ctx.author.send("Your Bungie account has been successfully linked to your Discord account!", delete_after=10)
                     # Add the user to the mods notification list
                     with open("data/notify-mods.csv", "a", encoding="utf-8") as file:
-                        file.write(ctx.author.id + "\n")
+                        file.write(f"{ctx.author.id} \n")
                     # Give the user the "registered" role
                     role = discord.utils.get(ctx.guild.roles, name="Registered")
                     if not role:
