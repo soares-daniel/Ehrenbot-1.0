@@ -15,6 +15,10 @@ class Misc(commands.Cog):
         self.logger.addHandler(self.bot.file_handler)
         self.logger.addHandler(self.bot.stream_handler)
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.bot.add_view(CharacterView())
+
     @commands.slash_command(name="violin", description="Plays the worlds smallest violin")
     async def violin(self, ctx: discord.ApplicationContext):
         self.logger.info("%s used the violin command", ctx.author)
