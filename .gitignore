@@ -19,3 +19,5 @@ logs
 *.content
 tmp
 
+# Implementation
+ehrenbot/cogs/misc.py

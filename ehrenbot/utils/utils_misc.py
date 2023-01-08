@@ -34,4 +34,4 @@ class CharacterView(discord.ui.View):
                     await member.remove_roles(role)
             await member.add_roles(new_role)
             await interaction.response.send_message(f"You have chosen the {select.values[0]} symbol", ephemeral=True, delete_after=5)
-        await interaction.message.edit(view=self)
+        await interaction.message.edit(content="", view=self)
