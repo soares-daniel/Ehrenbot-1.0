@@ -327,8 +327,8 @@ class ClanRequestView(discord.ui.View):
             return
         if response["ErrorCode"] == 1:
             await interaction.followup.send("User was invited", ephemeral=True, delete_after=5)
-            user = self.bot.get_user(discord_id)
-            print(user.name)
+            # Get member
+            user = interaction.guild.get_member(discord_id)
             await user.send("You were invited to the clan")
             clan_role = discord.utils.get(interaction.guild.roles, name="Clan")
             await user.add_roles(clan_role)
