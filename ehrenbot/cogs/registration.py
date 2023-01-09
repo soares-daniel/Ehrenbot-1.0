@@ -78,7 +78,7 @@ class Registration(commands.Cog):
                     channel = ctx.guild.get_channel(member["channel_id"])
                     message = await channel.fetch_message(member["message_id"])
                     embed = message.embeds[0]
-                    embed.add_field(name="Bungie.Net", value=member["destiny_profile"]["uniqueName"], inline=False)
+                    embed.add_field(name="Bungie.Net", value=member["destiny_profile"]["unique_name"], inline=False)
                     embed.color = discord.Color.green()
                     await message.edit(content="", embed=embed)
                 else:

@@ -320,6 +320,7 @@ class ClanRequestView(discord.ui.View):
             membership_id=user_membership_id,
             message=f"{admin_profile['unique_name']} hat dich zu Code Ehre eingeladen"
         )
+        self.logger.debug(response)
         if response is None:
             await interaction.followup.send("Invite failed", ephemeral=True, delete_after=5)
             self.logger.warn("Invite failed for %d", discord_id)
@@ -327,6 +328,7 @@ class ClanRequestView(discord.ui.View):
         if response["ErrorCode"] == 1:
             await interaction.followup.send("User was invited", ephemeral=True, delete_after=5)
             user = self.bot.get_user(discord_id)
+            print(user.name)
             await user.send("You were invited to the clan")
             clan_role = discord.utils.get(interaction.guild.roles, name="Clan")
             await user.add_roles(clan_role)
