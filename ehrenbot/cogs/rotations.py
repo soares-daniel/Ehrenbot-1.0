@@ -67,15 +67,14 @@ class Rotations(commands.Cog):
 
         await asyncio.sleep(3600)
         # Delete previous emojis
-        emoji_collection = self.bot.database["emojis"]
-        for entry in emoji_collection.find({"vendor_hash": {"$in": [672118013, 350061650]}}):
-            emoji_id = entry["emoji_id"]
-            guild_id = entry["guild_id"]
-            emoji =  await self.bot.get_guild(guild_id).fetch_emoji(emoji_id)
-            await self.bot.get_guild(guild_id).delete_emoji(emoji)
-            emoji_collection.delete_one({"emoji_id": emoji_id})
-            self.logger.debug("Deleted emoji %s from guild %s", emoji.name, guild_id)
-        self.logger.debug("Done deleting emojis")
+        banshee_guild_id = 1057709724843397282
+        ada_guild_id = 1057710325631295590
+        ada_guild = self.bot.get_guild(ada_guild_id)
+        banshee_guild = self.bot.get_guild(banshee_guild_id)
+        for emoji in ada_guild.emojis:
+            await ada_guild.delete_emoji(emoji)
+        for emoji in banshee_guild.emojis:
+            await banshee_guild.delete_emoji(emoji)
 
     @tasks.loop(count=1)
     async def xur(self):
@@ -111,15 +110,10 @@ class Rotations(commands.Cog):
 
         await asyncio.sleep(3600)
         # Delete previous emojis
-        emoji_collection = self.bot.database["emojis"]
-        for entry in emoji_collection.find({"vendor_hash": {"$in": [2190858386]}}):
-            emoji_id = entry["emoji_id"]
-            guild_id = entry["guild_id"]
-            emoji =  await self.bot.get_guild(guild_id).fetch_emoji(emoji_id)
-            await self.bot.get_guild(guild_id).delete_emoji(emoji)
-            emoji_collection.delete_one({"emoji_id": emoji_id})
-            self.logger.debug("Deleted emoji %s from guild %s", emoji.name, guild_id)
-        self.logger.debug("Done deleting emojis")
+        xur_guild_id = 1057711135668850688
+        guild = self.bot.get_guild(xur_guild_id)
+        for emoji in guild.emojis:
+            await guild.delete_emoji(emoji)
 
 def setup(bot) -> None:
     bot.add_cog(Rotations(bot))
