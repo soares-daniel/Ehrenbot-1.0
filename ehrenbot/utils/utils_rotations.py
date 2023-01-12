@@ -249,6 +249,12 @@ async def get_missing_mods(bot: Ehrenbot, logger: Logger, discord_id: int) -> bo
         # Get all collectibles
         profile_collection = bot.database["members"]
         profile = profile_collection.find_one({"discord_id": discord_id})
+        if not profile:
+            logger.info("No profile found for %d. Removing from list", discord_id)
+            return {"message": "No profile found for this user."}
+        if not profile["destiny_profile"]:
+            logger.info("No destiny profile found for %d. Removing from list", discord_id)
+            return {"message": "No profile found for this user."}
         response = await bot.destiny_client.destiny2.GetProfile(
             destiny_membership_id=profile["destiny_profile"]["destiny_membership_id"],
             membership_type=profile["destiny_profile"]["membership_type"],
@@ -319,8 +325,15 @@ async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
     with open("data/notify-mods.csv", "r", encoding="utf-8") as file:
         notify_mods = file.read().splitlines()
     for member_id in notify_mods:
-        member = await bot.fetch_user(member_id)
+        try:
+            member = await bot.fetch_user(member_id)
+        except discord.NotFound:
+            notify_mods.remove(member_id)
+            continue
         missing_mods = await get_missing_mods(bot=bot, logger=logger, discord_id=int(member_id))
+        if missing_mods == {"message": "No profile found for this user."}:
+            notify_mods.remove(member_id)
+            continue
         if missing_mods == {"message": "You have all mods!"}:
             notify_mods.remove(member_id)
             await member.send("You have all mods! You will no longer be notified.")
@@ -341,7 +354,8 @@ async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
 
     # Update notify-mods.csv
     with open("data/notify-mods.csv", "w", encoding="utf-8") as file:
-        file.write("\n".join(notify_mods))
+        for member_id in notify_mods:
+            file.write(f"{member_id}\n")
     logger.info("Daily vendor rotation complete!")
 
 async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
