@@ -26,7 +26,7 @@ class Misc(commands.Cog):
         else:
             try:
                 voice = await ctx.author.voice.channel.connect()
-                await ctx.respond("https://tenor.com/view/sad-upset-violin-sponge-bob-mr-crab-gif-3466351", ephemeral=True, delete_after=5)
+                await ctx.respond("https://tenor.com/view/sad-upset-violin-sponge-bob-mr-crab-gif-3466351", ephemeral=True, delete_after=10)
                 voice.play(FFmpegPCMAudio(source="data/mp3/violin.mp3"))
                 while voice.is_playing():
                     await asyncio.sleep(1)
