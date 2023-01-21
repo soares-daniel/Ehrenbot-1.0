@@ -139,12 +139,6 @@ class MemberManager(commands.Cog):
             message = await member_hall.fetch_message(message_id)
             await message.delete()
         member_collection.delete_many({"discord_id": member.id})
-        # Delete member from mod notifications
-        with open("data/notify-mods.csv", "r+", encoding="utf-8") as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if row[0] == str(member.id):
-                    reader.remove(row)
 
 def setup(bot) -> None:
     bot.add_cog(MemberManager(bot))

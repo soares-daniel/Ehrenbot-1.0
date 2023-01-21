@@ -242,60 +242,6 @@ async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
         logger.debug("%d info updated", vendor_hash)
         return True
 
-async def get_missing_mods(bot: Ehrenbot, logger: Logger, discord_id: int) -> bool:
-    try:
-        logger.debug("Getting missing mods for %d...", discord_id)
-
-        # Get all collectibles
-        profile_collection = bot.database["members"]
-        profile = profile_collection.find_one({"discord_id": discord_id})
-        if not profile:
-            logger.info("No profile found for %d. Removing from list", discord_id)
-            return {"message": "No profile found for this user."}
-        if not profile["destiny_profile"]:
-            logger.info("No destiny profile found for %d. Removing from list", discord_id)
-            return {"message": "No profile found for this user."}
-        response = await bot.destiny_client.destiny2.GetProfile(
-            destiny_membership_id=profile["destiny_profile"]["destiny_membership_id"],
-            membership_type=profile["destiny_profile"]["membership_type"],
-            components=[800])
-        collectibles = response["Response"]["profileCollectibles"]["data"]["collectibles"]
-        not_acquired = []
-
-        # Get not acquired collectibles
-        for collectible in collectibles:
-            if collectibles[collectible]["state"]%2 == 1:
-                not_acquired.append(int(collectible))
-
-        # Get mods from not acquired collectibles
-        final = []
-        mods = bot.database["destiny_mods"]
-        for mod in mods.find():
-            if mod["hash"] in not_acquired and mod["itemHash"] != 2527938402:
-                final.append(mod["itemHash"])
-
-        # Get available mods
-        if not final:
-            return {"message": "You have all mods!"}
-        rotation_collection = bot.database["destiny_rotation"]
-        banshee_mods = rotation_collection.find_one({"vendor_hash": 672118013})["mods"]
-        ada_mods = rotation_collection.find_one({"vendor_hash": 350061650})["mods"]
-        missing_mods = {672118013: [], 350061650: []}
-        for mod in banshee_mods:
-            mod = banshee_mods[mod]
-            if mod["item_hash"] in final:
-                missing_mods[672118013].append(mod["definition"]["displayProperties"]["name"])
-        for mod in ada_mods:
-            mod = ada_mods[mod]
-            if mod["item_hash"] in final:
-                missing_mods[350061650].append(mod["definition"]["displayProperties"]["name"])
-    except Exception as ex:
-        logger.exception("Error getting missing mods: %s", ex)
-        return {672118013: [], 350061650: []}
-    else:
-        logger.info("Missing mods sent to %d", discord_id)
-        return missing_mods
-
 async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
     channel: discord.TextChannel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
     if not channel:
@@ -319,44 +265,7 @@ async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
             _id = channel.last_message_id
             rotation_collection.update_one({"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True)
         logger.debug("Sent embed for vendor %s", vendor_hash)
-
-    # Notify members for mods
-    logger.debug("Notifying members for missing mods...")
-    with open("data/notify-mods.csv", "r", encoding="utf-8") as file:
-        notify_mods = file.read().splitlines()
-    for member_id in notify_mods:
-        try:
-            member = await bot.fetch_user(member_id)
-        except discord.NotFound:
-            notify_mods.remove(member_id)
-            continue
-        missing_mods = await get_missing_mods(bot=bot, logger=logger, discord_id=int(member_id))
-        if missing_mods == {"message": "No profile found for this user."}:
-            notify_mods.remove(member_id)
-            continue
-        if missing_mods == {"message": "You have all mods!"}:
-            notify_mods.remove(member_id)
-            await member.send("You have all mods! You will no longer be notified.")
-            continue
-        if missing_mods == {672118013: [], 350061650: []}:
-            continue
-        member = await bot.fetch_user(member_id)
-        ada_mods: list = missing_mods.get(350061650)
-        banshee_mods: list = missing_mods.get(672118013)
-        reset_time = datetime.datetime.now(timezone.utc) + datetime.timedelta(days=1)
-        await member.send("You are missing mods from vendors! Go pick them up before it's too late!")
-        if ada_mods:
-            await member.send(f"Missing mods from Ada-1: {ada_mods}")
-        if banshee_mods:
-            await member.send(f"Missing mods from Banshee-44: {banshee_mods}")
-        await member.send(f"Reset: **{reset_time.strftime('%Y-%m-%d')} 17:00:00 UTC**")
-        logger.debug("Sent notification to %s", member_id)
-
-    # Update notify-mods.csv
-    with open("data/notify-mods.csv", "w", encoding="utf-8") as file:
-        for member_id in notify_mods:
-            file.write(f"{member_id}\n")
-    logger.info("Daily vendor rotation complete!")
+    logger.info("Daily vendor rotation complete")
 
 async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
                                   collection: Collection, vendor_hash: int = 0) -> Union[discord.Emoji, None]:
