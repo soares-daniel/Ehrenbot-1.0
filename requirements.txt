@@ -10,6 +10,7 @@ charset-normalizer
 Destipy
 discord-ext-i18n
 dnspython
+ffmpeg
 frozenlist
 googletrans
 h11
