@@ -26,6 +26,7 @@ packaging
 pep517
 py-cord
 pymongo
+PyNaCl
 python-dotenv
 requests
 rfc3986
