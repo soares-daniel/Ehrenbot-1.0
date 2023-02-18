@@ -10,17 +10,20 @@ app.secret_key = DISCORD_BOT_TOKEN
 
 # Logging
 app.logger.setLevel(logging.WARNING)
+formatter = logging.Formatter('%(asctime)s - %(levelname)-8s: %(message)s [in %(pathname)s:%(lineno)d]')
+for handler in app.logger.handlers:
+    if isinstance(handler, logging.StreamHandler):
+        app.logger.removeHandler(handler)
 file_handler = handlers.TimedRotatingFileHandler(
     filename="logs/webapp.log",
     when="midnight",
     backupCount=7
 )
-formatter = logging.Formatter('%(asctime)s - %(levelname)-8s: %(message)s [in %(pathname)s:%(lineno)d]')
 file_handler.setFormatter(formatter)
+app.logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 stream_handler.setLevel(logging.ERROR)
-app.logger.addHandler(file_handler)
 app.logger.addHandler(stream_handler)
 
 @app.route('/')
