@@ -17,6 +17,5 @@ app = Flask(__name__)
 def hello():
     return "This is a flask web server hosted on Sparked Host!"
 
-bot.run(DISCORD_BOT_TOKEN)
-
 app.run(host='0.0.0.0', port=SERVER_PORT)
+bot.run(DISCORD_BOT_TOKEN)
