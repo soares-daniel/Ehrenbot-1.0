@@ -1,7 +1,6 @@
 import logging
 from logging import handlers
 
-import click
 from flask import Flask, render_template, request, redirect, url_for
 from settings import DISCORD_BOT_TOKEN
 
