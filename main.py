@@ -14,7 +14,11 @@ for filename in os.listdir("./ehrenbot/cogs"):
 def run_app():
     app.run(host='0.0.0.0', port=SERVER_PORT)
 
-thread = threading.Thread(target=run_app)
-thread.start()
+web_thread = threading.Thread(target=run_app)
+web_thread.start()
 
-bot.run(DISCORD_BOT_TOKEN)
+def run_bot():
+    bot.run(DISCORD_BOT_TOKEN)
+
+bot_thread = threading.Thread(target=run_bot)
+bot_thread.start()
