@@ -20,4 +20,4 @@ def login():
 def dashboard():
     return render_template('dashboard.html')
 
-app.run(port=26028)
+app.run(port=26028, debug=False)
