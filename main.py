@@ -20,4 +20,3 @@ def hello():
 bot.run(DISCORD_BOT_TOKEN)
 
 app.run(host='0.0.0.0', port=SERVER_PORT)
-from flask import Flask
