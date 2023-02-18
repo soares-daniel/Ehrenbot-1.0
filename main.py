@@ -1,4 +1,5 @@
 import os
+import threading
 
 from flask import Flask
 
@@ -17,5 +18,11 @@ app = Flask(__name__)
 def hello():
     return "This is a flask web server hosted on Sparked Host!"
 
-app.run(host='0.0.0.0', port=SERVER_PORT)
+def run_app():
+    app.run(host='0.0.0.0', port=SERVER_PORT)
+
+
+thread = threading.Thread(target=run_app)
+thread.start()
+
 bot.run(DISCORD_BOT_TOKEN)
