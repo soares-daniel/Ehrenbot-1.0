@@ -18,7 +18,7 @@ class Ehrenbot(commands.Bot):
     """The Ehrenbot Discord bot."""
     def __init__(self) -> None:
         # Bot
-        activity = Activity(type=ActivityType.competing, name="Bug fixing")
+        activity = Activity(type=ActivityType.playing, name="Lightfall prep")
         intents = Intents.all()
         super().__init__(activity=activity, command_prefix="!",
                          intents=intents)
