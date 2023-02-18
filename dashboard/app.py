@@ -1,14 +1,22 @@
-import os
-from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for
+from settings import DISCORD_BOT_TOKEN
 
-from flask import Flask
+app = Flask(__name__, template_folder='templates')
+app.secret_key = DISCORD_BOT_TOKEN
 
-app = Flask(__name__)
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-@app.route("/")
-def hello():
-    return "This is a flask web server hosted on Sparked Host!"
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Authenticate user credentials and redirect to dashboard page
+        return redirect(url_for('dashboard'))
+    else:
+        return render_template('login.html')
 
-if __name__ == "__main__":
-    load_dotenv()
-    app.run(host='0.0.0.0', port=os.getenv('SERVER_PORT'))
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
