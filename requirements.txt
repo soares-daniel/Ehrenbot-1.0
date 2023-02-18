@@ -11,6 +11,7 @@ Destipy
 discord-ext-i18n
 dnspython
 ffmpeg
+Flask
 frozenlist
 googletrans
 h11
