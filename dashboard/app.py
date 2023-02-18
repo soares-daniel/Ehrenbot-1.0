@@ -20,4 +20,4 @@ def login():
 def dashboard():
     return render_template('dashboard.html')
 
-app.run(port=26028, debug=False, host='78.108.218.24')
+app.run(port=26028, debug=False, host='https://dashbot.sparked.network/')
