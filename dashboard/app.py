@@ -28,6 +28,8 @@ stream_handler.setLevel(logging.ERROR)
 app.logger.addHandler(stream_handler)
 
 # Modify click (prevent it from printing to stdout)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.WARNING)
 def secho(text, file=None, nl=None, err=None, color=None, **styles):
     pass
 
