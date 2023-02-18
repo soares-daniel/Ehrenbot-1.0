@@ -1,6 +1,7 @@
 import logging
-
 from logging import handlers
+
+import click
 from flask import Flask, render_template, request, redirect, url_for
 from settings import DISCORD_BOT_TOKEN
 
@@ -25,6 +26,16 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 stream_handler.setLevel(logging.ERROR)
 app.logger.addHandler(stream_handler)
+
+# Modify click (prevent it from printing to stdout)
+def secho(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
+
+def echo(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
+
+click.echo = echo
+click.secho = secho
 
 @app.route('/')
 def index():

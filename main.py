@@ -12,7 +12,7 @@ for filename in os.listdir("./ehrenbot/cogs"):
         bot.load_extension(f"ehrenbot.cogs.{filename[:-3]}")
 
 def run_app():
-    app.run(host='0.0.0.0', port=SERVER_PORT)
+    app.run(host='0.0.0.0', port=SERVER_PORT, debug=False)
 
 web_thread = threading.Thread(target=run_app)
 web_thread.start()
