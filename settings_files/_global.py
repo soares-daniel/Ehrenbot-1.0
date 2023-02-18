@@ -28,3 +28,6 @@ MODERATOR_ROLE = "Ehrenmänner und Ender"
 TWITTER_API_KEY = os.getenv('TWITTER_API_KEY')
 TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET')
 TWITTER_BEARER_TOKEN = os.getenv('TWITTER_BEARER_TOKEN')
+
+# Server configuration
+SERVER_PORT = os.getenv('SERVER_PORT')
