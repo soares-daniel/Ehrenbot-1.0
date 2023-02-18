@@ -67,8 +67,9 @@ class Ehrenbot(commands.Bot):
         self.vendor_guild_id = 0
 
     async def on_ready(self) -> None:
-        print("Logged in as")
+        print("------")
         print(self.user.name)
+        print("From Ehrenmann to Ehrenmänner")
         print("------")
 
     async def on_application_command_error(self, ctx: commands.Context, error: DiscordException) -> None:
