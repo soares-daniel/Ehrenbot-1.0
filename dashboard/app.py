@@ -11,7 +11,7 @@ app.secret_key = DISCORD_BOT_TOKEN
 
 # Logging
 logger = logging.getLogger('werkzeug')
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)-8s: %(message)s [in %(pathname)s:%(lineno)d]')
 for handler in app.logger.handlers:
     if isinstance(handler, logging.StreamHandler):
@@ -23,11 +23,12 @@ file_handler = handlers.TimedRotatingFileHandler(
 )
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
+app.logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 stream_handler.setLevel(logging.ERROR)
 logger.addHandler(stream_handler)
-
+app.logger.addHandler(file_handler)
 
 @app.route('/')
 def index():
