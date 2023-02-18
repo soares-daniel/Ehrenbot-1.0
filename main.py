@@ -17,8 +17,4 @@ def run_app():
 web_thread = threading.Thread(target=run_app)
 web_thread.start()
 
-def run_bot():
-    bot.run(DISCORD_BOT_TOKEN)
-
-bot_thread = threading.Thread(target=run_bot)
-bot_thread.start()
+bot.run(DISCORD_BOT_TOKEN)
