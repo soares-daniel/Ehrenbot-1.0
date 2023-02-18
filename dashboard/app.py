@@ -10,7 +10,8 @@ app = Flask(__name__, template_folder='templates')
 app.secret_key = DISCORD_BOT_TOKEN
 
 # Logging
-app.logger.setLevel(logging.WARNING)
+logger = logging.getLogger('werkzeug')
+logger.setLevel(logging.WARNING)
 formatter = logging.Formatter('%(asctime)s - %(levelname)-8s: %(message)s [in %(pathname)s:%(lineno)d]')
 for handler in app.logger.handlers:
     if isinstance(handler, logging.StreamHandler):
@@ -21,23 +22,12 @@ file_handler = handlers.TimedRotatingFileHandler(
     backupCount=7
 )
 file_handler.setFormatter(formatter)
-app.logger.addHandler(file_handler)
+logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 stream_handler.setLevel(logging.ERROR)
-app.logger.addHandler(stream_handler)
+logger.addHandler(stream_handler)
 
-# Modify click (prevent it from printing to stdout)
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.WARNING)
-def secho(text, file=None, nl=None, err=None, color=None, **styles):
-    pass
-
-def echo(text, file=None, nl=None, err=None, color=None, **styles):
-    pass
-
-click.echo = echo
-click.secho = secho
 
 @app.route('/')
 def index():
