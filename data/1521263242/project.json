@@ -1,0 +1,23 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "This is a 21:9 capture of a Destiny 2 loading screen. It was darkened and loops perfectly. \n\nkeywords:\nDestiny 2\n21:9\nUltrawide\nDark\nLoading screen \nLoop",
+	"file" : "Destiny menu_1_inverse.mp4",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0 0 0"
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"tags" : [ "Game" ],
+	"title" : "Destiny 2 Menu Loading Screen Loop - Dark",
+	"type" : "video",
+	"visibility" : "public"
+}
