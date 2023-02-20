@@ -1,6 +1,6 @@
 import os
 from ehrenbot import Ehrenbot
-from settings import DISCORD_BOT_TOKEN, SERVER_PORT
+from settings import DISCORD_BOT_TOKEN
 
 bot = Ehrenbot()
 
