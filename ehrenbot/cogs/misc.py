@@ -42,5 +42,15 @@ class Misc(commands.Cog):
         view = CharacterView()
         await ctx.respond("Select your character:", view=view)
 
+    @commands.user_command(name="Anstupsen", description="Stupst einen User an")
+    @commands.has_role(955138929160515624)
+    async def lux_role(self, ctx: discord.ApplicationContext, member: discord.Member):
+        try:
+            await member.send("Du wurdest von " + ctx.author.name + " angestupst")
+            await ctx.respond("User angestupst", ephemeral=True, delete_after=5)
+        except Exception as ex:
+            self.logger.error(ex)
+            await ctx.respond("Something went wrong", ephemeral=True, delete_after=5)
+
 def setup(bot):
     bot.add_cog(Misc(bot))
