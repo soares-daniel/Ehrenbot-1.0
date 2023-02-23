@@ -43,8 +43,7 @@ class Misc(commands.Cog):
         await ctx.respond("Select your character:", view=view)
 
     @commands.user_command(name="Anstupsen", description="Stupst einen User an")
-    @commands.has_role(955138929160515624)
-    async def lux_role(self, ctx: discord.ApplicationContext, member: discord.Member):
+    async def anstupsen(self, ctx: discord.ApplicationContext, member: discord.Member):
         try:
             await member.send("Du wurdest von " + ctx.author.name + " angestupst")
             await ctx.respond("User angestupst", ephemeral=True, delete_after=5)
