@@ -338,26 +338,11 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return armor_string
 
-async def mod_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
-    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    inventory_item_collection = bot.mongo_client["d2manifest_en"]["DestinyInventoryItemDefinition"]
-    mods = daily_rotation["mods"]
-    mod_string = ""
-    for mod in mods:
-        item_hash = mods[mod]["item_hash"]
-        item_name = mods[mod]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=inventory_item_collection, vendor_hash=vendor_hash)
-        mod_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
-    return mod_string
-
 async def banshee_embed(bot: Ehrenbot) -> discord.Embed:
     embed = discord.Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.", color=0x567e9d)
     vendor_hash = 672118013
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/banshee-icon.png")
     embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/3142923bc72bcd5a769badc26bd8b508.jpg")
-    mod_string = await mod_embed_field(bot, vendor_hash)
-    embed.add_field(name="Mods", value=mod_string, inline=True)
     weapon_string = await weapon_embed_field(bot, vendor_hash)
     embed.add_field(name="Weapons", value=weapon_string, inline=True)
     return embed
@@ -367,8 +352,6 @@ async def ada_embed(bot: Ehrenbot) -> discord.Embed:
     vendor_hash = 350061650
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/ada-icon.png")
     embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/e6a489d1386e2928f9a5a33b775b8f03.jpg")
-    mod_string = await mod_embed_field(bot, vendor_hash)
-    embed.add_field(name="Mods", value=mod_string, inline=False)
     warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")
     embed.add_field(name="Warlock", value=warlock_string, inline=False)
     titan_string = await armor_embed_field(bot, vendor_hash, "Titan")
