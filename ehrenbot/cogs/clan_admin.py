@@ -61,14 +61,11 @@ class ClanAdmin(commands.Cog):
             sedam = self.bot.get_user(self.bot.ADMIN_DISCORD_ID)
             await sedam.send(
                 f"An error occurred while {ctx.author.name} tried to kick a member from the clan.\n"
-                f"Response: {response}"
-            )
+                f"Response: {response}")
             return
         if response["ErrorCode"] == 1:
-            await ctx.send(
-                f"Kicked {member.mention} from the clan.", hidden=True, delete_after=5
-            )
-
+            await member.kick(reason="Kicked from clan.")
+            await ctx.send(f"Kicked {member.mention} from the clan and from the server.", hidden=True, delete_after=5)
 
 def setup(bot):
     bot.add_cog(ClanAdmin(bot))
