@@ -270,7 +270,7 @@ async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
 async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
                                   collection: Collection, vendor_hash: int = 0) -> Union[discord.Emoji, None]:
     try:
-        entry = collection.find_one({"hash": item_hash})
+        entry = collection.find_one({"itemHash": item_hash})
         icon_url = entry["displayProperties"]["icon"]
         name = entry["displayProperties"]["name"]
         # Replace all non-alphanumeric characters with underscores in the middle of the name
