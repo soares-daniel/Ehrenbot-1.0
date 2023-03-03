@@ -308,7 +308,7 @@ async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> discord.Embed:
 
 async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    inventory_item_collection = bot.mongo_client["d2manifest_en"]["DestinyInventoryItemDefinition"]
+    collectible_collection = bot.mongo_client["d2manifest_en"]["DestinyCollectibleDefinition"]
     weapons = daily_rotation["weapons"]
     weapon_string = ""
     for weapon in weapons:
@@ -317,13 +317,13 @@ async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         item_hash = weapons[weapon]["item_hash"]
         item_name = weapons[weapon]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=inventory_item_collection, vendor_hash=vendor_hash)
+                                              collection=collectible_collection, vendor_hash=vendor_hash)
         weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return weapon_string
 
 async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> str:
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    inventory_item_collection = bot.mongo_client["d2manifest_en"]["DestinyInventoryItemDefinition"]
+    collectible_collection = bot.mongo_client["d2manifest_en"]["DestinyCollectibleDefinition"]
     armor = daily_rotation["armor"]
     armor_string = ""
     for armor_piece in armor:
@@ -334,7 +334,7 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
         item_hash = armor[armor_piece]["item_hash"]
         item_name = armor[armor_piece]["definition"]["displayProperties"]["name"]
         emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=inventory_item_collection, vendor_hash=vendor_hash)
+                                              collection=collectible_collection, vendor_hash=vendor_hash)
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return armor_string
 
