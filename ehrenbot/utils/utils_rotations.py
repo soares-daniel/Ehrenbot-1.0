@@ -359,7 +359,7 @@ async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
 
 
 async def create_emoji_from_entry(
-    bot: Ehrenbot, logger: Logger, vendor_hash: int, item_definition: dict
+    bot: Ehrenbot, logger: Logger, item_definition: dict
 ) -> Union[discord.Emoji, None]:
     try:
         item_hash = item_definition["hash"]
