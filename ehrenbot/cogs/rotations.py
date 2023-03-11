@@ -92,7 +92,6 @@ class Rotations(commands.Cog):
     async def xur(self):
         self.logger.debug("Starting Xur rotation...")
         weekdays = [1, 2, 3]
-        print(date.today().weekday())
         if date.today().weekday() in weekdays:
             embed = discord.Embed(title="Xûr", description="Xur is not here today. He will return again on **Friday.**", color=0xcdad36)
             embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")

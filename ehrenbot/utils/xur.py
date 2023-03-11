@@ -41,7 +41,6 @@ async def xur_rotation(bot: Ehrenbot, logger: logging.Logger):
 async def exotic_armor_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     """Returns a string with all the exotic armor for a specific vendor and category"""
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    intenvory_item_collection = bot.mongo_client["d2manifest_en"]["DestinyInventoryItemDefinition"]
     armor = daily_rotation["armor"]
     exotic_armor_string = ""
     for item in armor:
@@ -55,7 +54,6 @@ async def exotic_armor_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
 async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     """Returns a string with all the exotic weapons for a specific vendor and category"""
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    intenvory_item_collection = bot.mongo_client["d2manifest_en"]["DestinyInventoryItemDefinition"]
     weapons = daily_rotation["weapons"]
     exotic_weapon_string = ""
     for item in weapons:
