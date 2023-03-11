@@ -7,6 +7,7 @@ from typing import Union
 
 import aiohttp
 import discord
+from discord.utils import find
 
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.exceptions import (
@@ -375,8 +376,11 @@ async def create_emoji_from_entry(
             .replace(")", "_")
             .replace(" ", "_")
         )
+
         # Check if the emoji already exists
-        emoji = await bot.get_guild(bot.vendor_guild_id).fetch_emoji_by_name(item_name)
+        emojis = await bot.get_guild(bot.vendor_guild_id).fetch_emojis()
+        emoji = find(lambda e: e.name == item_name, emojis)
+
         if emoji:
             logger.debug("Emoji already exists for %d", item_hash)
             return emoji
@@ -480,9 +484,7 @@ async def shader_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     for shader in shaders:
         item_name = shaders[shader]["definition"]["displayProperties"]["name"]
         emoji: discord.Emoji = await create_emoji_from_entry(
-            bot=bot,
-            logger=bot.logger,
-            item_definition=shaders[shader]["definition"],
+            bot=bot, logger=bot.logger, item_definition=shaders[shader]["definition"]
         )
         shader_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return shader_string
