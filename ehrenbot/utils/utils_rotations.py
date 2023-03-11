@@ -375,6 +375,11 @@ async def create_emoji_from_entry(
             .replace(")", "_")
             .replace(" ", "_")
         )
+        # Check if the emoji already exists
+        emoji = await bot.get_guild(bot.vendor_guild_id).fetch_emoji_by_name(item_name)
+        if emoji:
+            logger.debug("Emoji already exists for %d", item_hash)
+            return emoji
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://www.bungie.net{item_icon}") as resp:
                 if resp.status != 200:
@@ -395,14 +400,6 @@ async def create_emoji_from_entry(
         return None
     else:
         logger.debug("Emoji created for %d", item_hash)
-        emoji_collection = bot.database["emojis"]
-        emoji_collection.insert_one(
-            {
-                "emoji_id": emoji.id,
-                "guild_id": bot.vendor_guild_id,
-                "vendor_hash": vendor_hash,
-            }
-        )
         return emoji
 
 
