@@ -99,6 +99,11 @@ class TicketSelect(discord.ui.View):
             await interaction.response.send_message(
                 "Request was created.\nPlease wait for a clan admin to respond to your request.",
                 ephemeral=True, delete_after=10)
+            # Check if user has registered. If not, send message to user.
+            tokens = self.bot.database["destiny_tokens"]
+            if tokens.count_documents({"discord_id": interaction.user.id}) == 0:
+                await interaction.user.send("You have not registered your Bungie account yet. "
+                                            "Please use the `/register` command to do so.")
         else:
             await interaction.message.edit(content="", view=self)
             await interaction.response.send_modal(TicketModal(value, self.bot, self.logger))
