@@ -1,4 +1,5 @@
 import asyncio
+import csv
 import logging
 
 import discord
@@ -101,6 +102,10 @@ class Registration(commands.Cog):
                     )
                     embed.color = discord.Color.green()
                     await message.edit(content="", embed=embed)
+                    # Insert member to shader notifications
+                    with open("data/notify-shaders.csv", "a", encoding="utf-8") as file:
+                        writer = csv.writer(file)
+                        writer.writerow([ctx.author.id])
                 else:
                     await ctx.author.send(
                         "Something went wrong while updating your profile. Please contact the admin.",

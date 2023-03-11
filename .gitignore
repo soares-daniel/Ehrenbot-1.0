@@ -18,9 +18,11 @@ logs
 # Database
 *.content
 tmp
+data/notify-shaders.csv
 
 # Implementation
 ehrenbot/cogs/misc.py
 
 # UI
 flask-datta-able
+

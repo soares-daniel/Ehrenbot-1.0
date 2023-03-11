@@ -1,4 +1,5 @@
 # pylint: disable=E0211,E1121,C0206,E1123
+import csv
 import logging
 from datetime import date, datetime, time, timezone
 
@@ -72,6 +73,63 @@ class Rotations(commands.Cog):
         await ctx.respond(
             "Deleting emojis from all rotation servers...", delete_after=5
         )
+
+    @rotation.command(
+        name="activate_notifications_shader",
+        description="Activates shader notifications",
+    )
+    async def activate_notifications_shader(self, ctx: discord.ApplicationContext):
+        tokens = self.bot.database["destiny_tokens"]
+        with open("data/notify-shaders.csv", "w", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            for token in tokens.find():
+                writer.writerow([token["discord_id"]])
+        await ctx.respond("Shader notifications activated.", delete_after=5)
+
+    @rotation.command(
+        name="ada_shaders_to_database",
+        description="Adds all ada shaders to the database",
+    )
+    async def shaders_to_database(self, ctx: discord.ApplicationContext):
+        await ctx.defer()
+
+        # Get full Ada-1 item list
+        vendor_collection = await self.bot.destiny_client.decode_hash(
+            350061650, "DestinyVendorDefinition"
+        )
+        vendor_items = vendor_collection["itemList"]
+        vendor_items = [
+            await self.bot.destiny_client.decode_hash(
+                item["itemHash"], "DestinyInventoryItemDefinition"
+            )
+            for item in vendor_items
+        ]
+
+        # Filter out non-shaders
+        shaders = [item for item in vendor_items if 41 in item["itemCategoryHashes"]]
+
+        shader = {
+            "hash": 0,
+            "name": "",
+            "icon": "",
+            "definition": {},
+        }
+
+        collection = self.bot.database["destiny_shaders"]
+        for item in shaders:
+            existing_shader = collection.find_one({"hash": item["hash"]})
+            if existing_shader:
+                continue
+            new_shader = (
+                shader.copy()
+            )  # Create a new copy of the template for each shader
+            new_shader["hash"] = item["hash"]
+            new_shader["name"] = item["displayProperties"]["name"]
+            new_shader["icon"] = item["displayProperties"]["icon"]
+            new_shader["definition"] = item
+            collection.insert_one(new_shader)
+
+        await ctx.respond("Added all shaders to database.", delete_after=5)
 
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):

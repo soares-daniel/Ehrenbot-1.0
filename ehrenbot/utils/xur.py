@@ -58,7 +58,7 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
     vendor_location = vendor_locations[vendor_location_index]
     embed = discord.Embed(
         title="Xûr",
-        description=f"Xûr is a vendor who sells exotic weapons, armor. \nCurrent location: **{vendor_location}**",
+        description=f"A peddler of strange curios, Xûr's motives are not his own. He bows to his distant masters, the Nine. \nCurrent location: **{vendor_location}**",
         color=0xCDAD36,
     )
     vendor_hash = 2190858386
