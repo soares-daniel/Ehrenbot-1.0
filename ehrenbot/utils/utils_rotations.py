@@ -267,22 +267,24 @@ async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
         logger.debug("Sent embed for vendor %s", vendor_hash)
     logger.info("Daily vendor rotation complete")
 
-async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, item_hash: int,
-                                  collection: Collection, vendor_hash: int = 0) -> Union[discord.Emoji, None]:
+async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, vendor_hash: int, item_definition: dict) -> Union[discord.Emoji, None]:
     try:
-        entry = collection.find_one({"itemHash": item_hash})
-        icon_url = entry["displayProperties"]["icon"]
-        name = entry["displayProperties"]["name"]
+        item_hash = item_definition["hash"]
+        item_name = item_definition["displayProperties"]["name"]
+        item_icon = item_definition["displayProperties"]["icon"]
         # Replace all non-alphanumeric characters with underscores in the middle of the name
-        name = name.replace(":", "_").replace("-", "_").replace(".", "_").replace("'", "_").replace("(", "_").replace(")", "_").replace(" ", "_")
+        item_name = item_name.replace(":", "_").replace("-", "_").replace(".", "_").replace("'", "_").replace("(", "_").replace(")", "_").replace(" ", "_")
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://www.bungie.net{icon_url}") as resp:
+            async with session.get(f"https://www.bungie.net{item_icon}") as resp:
                 if resp.status != 200:
                     raise aiohttp.ClientError(f"Error fetching image: {resp.status} {resp.reason}")
                 data = await resp.read()
-                emoji = await bot.get_guild(bot.vendor_guild_id).create_custom_emoji(name=name, image=data)
+                emoji = await bot.get_guild(bot.vendor_guild_id).create_custom_emoji(name=item_name, image=data)
     except aiohttp.ClientError as ex:
         logger.error("%s", ex)
+        return None
+    except Exception as ex:
+        logger.exception("Error creating emoji with item_definition %s:\n %s", item_definition, ex)
         return None
     else:
         logger.debug("Emoji created for %d", item_hash)
@@ -308,22 +310,19 @@ async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> discord.Embed:
 
 async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    collectible_collection = bot.mongo_client["d2manifest_en"]["DestinyCollectibleDefinition"]
     weapons = daily_rotation["weapons"]
     weapon_string = ""
     for weapon in weapons:
         if weapons[weapon]["definition"]["inventory"]["tierType"] == 6:
             continue
-        item_hash = weapons[weapon]["item_hash"]
         item_name = weapons[weapon]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=collectible_collection, vendor_hash=vendor_hash)
+        emoji: discord.Emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash,
+                                                             item_definition=weapons[weapon]["definition"])
         weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return weapon_string
 
 async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> str:
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
-    collectible_collection = bot.mongo_client["d2manifest_en"]["DestinyCollectibleDefinition"]
     armor = daily_rotation["armor"]
     armor_string = ""
     for armor_piece in armor:
@@ -331,10 +330,9 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
             continue
         if armor[armor_piece]["definition"]["inventory"]["tierType"] == 6:
             continue
-        item_hash = armor[armor_piece]["item_hash"]
         item_name = armor[armor_piece]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=collectible_collection, vendor_hash=vendor_hash)
+        emoji: discord.Emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash,
+                                                             item_definition=armor[armor_piece]["definition"])
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return armor_string
 
