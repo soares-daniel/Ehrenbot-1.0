@@ -435,7 +435,6 @@ async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         emoji: discord.Emoji = await create_emoji_from_entry(
             bot=bot,
             logger=bot.logger,
-            vendor_hash=vendor_hash,
             item_definition=weapons[weapon]["definition"],
         )
         weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
@@ -466,7 +465,6 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
         emoji: discord.Emoji = await create_emoji_from_entry(
             bot=bot,
             logger=bot.logger,
-            vendor_hash=vendor_hash,
             item_definition=armor[armor_piece]["definition"],
         )
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
@@ -484,7 +482,6 @@ async def shader_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         emoji: discord.Emoji = await create_emoji_from_entry(
             bot=bot,
             logger=bot.logger,
-            vendor_hash=vendor_hash,
             item_definition=shaders[shader]["definition"],
         )
         shader_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"

@@ -9,28 +9,36 @@ from discord.ext import commands
 from discord.ext.i18n import Agent
 from pymongo import MongoClient
 
-from settings import (BUNGIE_API_KEY, BUNGIE_CLIENT_ID, BUNGIE_CLIENT_SECRET,
-                      DEBUG, MONGODB_HOST, MONGODB_OPTIONS, MONGODB_PASS,
-                      MONGODB_USER, REDIRECT_URI)
+from settings import (
+    BUNGIE_API_KEY,
+    BUNGIE_CLIENT_ID,
+    BUNGIE_CLIENT_SECRET,
+    DEBUG,
+    MONGODB_HOST,
+    MONGODB_OPTIONS,
+    MONGODB_PASS,
+    MONGODB_USER,
+    REDIRECT_URI,
+)
 
 
 class Ehrenbot(commands.Bot):
     """The Ehrenbot Discord bot."""
+
     def __init__(self) -> None:
         # Bot
         activity = Activity(type=ActivityType.playing, name="Lightfall")
         intents = Intents.all()
-        super().__init__(activity=activity, command_prefix="!",
-                         intents=intents)
+        super().__init__(activity=activity, command_prefix="!", intents=intents)
         # Logging
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
         file_handler = handlers.TimedRotatingFileHandler(
-            filename="logs/discord.log",
-            when="midnight",
-            backupCount=7
+            filename="logs/discord.log", when="midnight", backupCount=7
         )
-        formatter = logging.Formatter('%(asctime)s - %(levelname)-8s - %(name)s - %(funcName)s - %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(levelname)-8s - %(name)s - %(funcName)s - %(message)s"
+        )
         file_handler.setFormatter(formatter)
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(formatter)
@@ -44,9 +52,12 @@ class Ehrenbot(commands.Bot):
         # MongoDB
         conn = f"mongodb+srv://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
         self.mongo_client = MongoClient(conn)
-        self.database = self.mongo_client["ehrenbot"] if not DEBUG else self.mongo_client["test"]
-        self.destiny_client = DestinyClient(BUNGIE_API_KEY, BUNGIE_CLIENT_ID,
-                                            BUNGIE_CLIENT_SECRET, REDIRECT_URI)
+        self.database = (
+            self.mongo_client["ehrenbot"] if not DEBUG else self.mongo_client["test"]
+        )
+        self.destiny_client = DestinyClient(
+            BUNGIE_API_KEY, BUNGIE_CLIENT_ID, BUNGIE_CLIENT_SECRET, REDIRECT_URI
+        )
         # Translator
         self.agent = Agent(translate_messages=True)
 
@@ -63,7 +74,9 @@ class Ehrenbot(commands.Bot):
             self.destiny_invite_code = "tHQWSPuFVW"
         self.ADMIN_DISCORD_ID = 279725513323315200
         self.BUNGIE_BASE_URL = "https://www.bungie.net/"
-        self.RESET_TIME = time(hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+        self.RESET_TIME = time(
+            hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
+        )
         self.vendor_guild_id = 0
 
     async def on_ready(self) -> None:
@@ -72,10 +85,14 @@ class Ehrenbot(commands.Bot):
         print("From Ehrenmann to Ehrenmänner")
         print("------")
 
-    async def on_application_command_error(self, ctx: commands.Context, error: DiscordException) -> None:
+    async def on_application_command_error(
+        self, ctx: commands.Context, error: DiscordException
+    ) -> None:
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.respond("This command is currently on cooldown!")
         elif isinstance(error, commands.MissingPermissions):
-            await ctx.respond("You do not have the required permissions to run this command!")
+            await ctx.respond(
+                "You do not have the required permissions to run this command!"
+            )
         else:
             raise error  # Here we raise other errors to ensure they aren't ignored

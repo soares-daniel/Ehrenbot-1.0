@@ -1,4 +1,5 @@
 import os
+
 from ehrenbot import Ehrenbot
 from settings import DISCORD_BOT_TOKEN
 

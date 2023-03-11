@@ -6,7 +6,9 @@ import discord
 from ehrenbot import Ehrenbot
 
 
-def create_ticket_embed(ticket: dict, author: Union[discord.Member, discord.User]) -> discord.Embed:
+def create_ticket_embed(
+    ticket: dict, author: Union[discord.Member, discord.User]
+) -> discord.Embed:
     embed = discord.Embed(title=ticket["title"], color=discord.Color.gold())
     embed.set_thumbnail(url=author.display_avatar.url)
     embed.add_field(value=ticket["ticket_id"], name="Id", inline=True)
@@ -16,7 +18,10 @@ def create_ticket_embed(ticket: dict, author: Union[discord.Member, discord.User
     embed.add_field(name="Description", value=ticket["description"], inline=False)
     return embed
 
-async def set_ticket_status(bot: Ehrenbot, embed: discord.Embed, status: str) -> discord.Embed:
+
+async def set_ticket_status(
+    bot: Ehrenbot, embed: discord.Embed, status: str
+) -> discord.Embed:
     status_color = {
         "Open": discord.Color.gold(),
         "In Work": discord.Color.green(),
@@ -31,8 +36,11 @@ async def set_ticket_status(bot: Ehrenbot, embed: discord.Embed, status: str) ->
     ticket_entry: dict = ticket_collection.find_one({"ticket_id": ticket_id})
     user_id: int = ticket_entry["discord_id"]
     user = bot.get_user(user_id)
-    await user.send(f"Your ticket status has been updated to **{status}**", delete_after=3600)
+    await user.send(
+        f"Your ticket status has been updated to **{status}**", delete_after=3600
+    )
     return embed
+
 
 def get_ticket_entry(bot: Ehrenbot, logger: Logger, ticket_id: int) -> dict:
     try:
@@ -45,11 +53,20 @@ def get_ticket_entry(bot: Ehrenbot, logger: Logger, ticket_id: int) -> dict:
         logger.error("%s", ex)
         return
 
+
 # Syncs the ticket embeds and updates the database
-async def sync_ticket(bot: Ehrenbot, logger: Logger, interaction: discord.Interaction, ticket_id: int, embed: discord.Embed) -> None:
+async def sync_ticket(
+    bot: Ehrenbot,
+    logger: Logger,
+    interaction: discord.Interaction,
+    ticket_id: int,
+    embed: discord.Embed,
+) -> None:
     ticket_entry = get_ticket_entry(bot, logger, ticket_id)
     if ticket_entry is None:
-        await interaction.followup.send("Ticket not found, please contact admin.", ephemeral=True, delete_after=5)
+        await interaction.followup.send(
+            "Ticket not found, please contact admin.", ephemeral=True, delete_after=5
+        )
         return
     guild = bot.get_guild(782316238247559189)
     admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")  # type: ignore
@@ -64,4 +81,6 @@ async def sync_ticket(bot: Ehrenbot, logger: Logger, interaction: discord.Intera
             ticket["status"] = field.value
         if field.name == "Edit":
             ticket["edit"] = field.value
-    bot.database["destiny_tickets"].update_one({"ticket_id": ticket_id}, {"$set": {"ticket": ticket}})
+    bot.database["destiny_tickets"].update_one(
+        {"ticket_id": ticket_id}, {"$set": {"ticket": ticket}}
+    )

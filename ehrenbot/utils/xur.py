@@ -107,7 +107,6 @@ async def exotic_armor_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         emoji = await create_emoji_from_entry(
             bot=bot,
             logger=bot.logger,
-            vendor_hash=vendor_hash,
             item_definition=armor[item]["definition"],
         )
         exotic_armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
@@ -128,7 +127,6 @@ async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         emoji = await create_emoji_from_entry(
             bot=bot,
             logger=bot.logger,
-            vendor_hash=vendor_hash,
             item_definition=weapons[item]["definition"],
         )
         exotic_weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"

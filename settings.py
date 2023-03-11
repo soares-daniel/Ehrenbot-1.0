@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-DEBUG = os.getenv('DEBUG')
+DEBUG = os.getenv("DEBUG")
 if DEBUG:
     print("------")
     print("DEBUG mode is enabled")

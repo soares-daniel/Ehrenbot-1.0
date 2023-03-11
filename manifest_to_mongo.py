@@ -26,7 +26,9 @@ BUNGIE_BASE = "https://bungie.net/"
 BUNGIE_API_BASE = "https://bungie.net/Platform/"
 
 # %% Step1: Find the correct manifest to download
-manifestPaths = json.loads(urllib.request.urlopen(BUNGIE_API_BASE + "/Destiny2/Manifest/").read())["Response"]
+manifestPaths = json.loads(
+    urllib.request.urlopen(BUNGIE_API_BASE + "/Destiny2/Manifest/").read()
+)["Response"]
 manifestPath = manifestPaths["mobileWorldContentPaths"][MANIFEST_LANGUAGE]
 print("Selected manifest url:", manifestPath)
 # %% Step 2, download and unzip the manifest
@@ -43,7 +45,7 @@ else:
     print("Successfully downloaded the manifest into '" + zipped_manifest + "'")
 
     # %%
-    with zipfile.ZipFile(zipped_manifest, 'r') as zip_ref:
+    with zipfile.ZipFile(zipped_manifest, "r") as zip_ref:
         zip_ref.extractall("./tmp/")
     print("Successfully unzipped the manifest")
 
@@ -52,17 +54,18 @@ else:
     con = sqlite3.connect("./tmp/" + os.path.basename(manifestPath))
     cur = con.cursor()
 
-    sql_query_selectAllTables = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+    sql_query_selectAllTables = (
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+    )
     cur.execute(sql_query_selectAllTables)
 
     manifestTables = [t[0] for t in cur.fetchall() if t[0].endswith("Definition")]
 
     # %% Step 4: Import!
     # mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
-    MONGODB_URL = "mongodb+srv://{}:{}@{}/?{}".format(MONGODB_USER,
-                                                            MONGODB_PASS,
-                                                            MONGODB_HOST,
-                                                            MONGODB_OPTIONS)
+    MONGODB_URL = "mongodb+srv://{}:{}@{}/?{}".format(
+        MONGODB_USER, MONGODB_PASS, MONGODB_HOST, MONGODB_OPTIONS
+    )
 
     client = MongoClient(MONGODB_URL)
 
@@ -84,7 +87,6 @@ else:
         else:
             collection.insert_many(jsonContent)
             print("Done with " + tableName)
-
 
     con.close()
     client.close()
