@@ -19,6 +19,7 @@ class Rotations(commands.Cog):
         self.logger.addHandler(self.bot.file_handler)
         self.logger.addHandler(self.bot.stream_handler)
         self.daily_vendor_rotation.start()
+        self.delete_emojis_loop.start()
 
     def cog_unload(self) -> None:
         self.daily_vendor_rotation.cancel()
@@ -56,6 +57,12 @@ class Rotations(commands.Cog):
             await guild.delete_emoji(emoji)
         await ctx.respond(f"Deleted all emojis from guild {guild_id}", delete_after=5)
 
+    @rotation.command(name="del_emoji_all", description="Deletes all emojis from all rotation servers")
+    async def del_emoji_all(self, ctx: discord.ApplicationContext):
+        await self.delete_emojis.start()
+        await ctx.respond("Deleting emojis from all rotation servers...", delete_after=5)
+
+
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
         self.banshee.start()
@@ -68,25 +75,21 @@ class Rotations(commands.Cog):
         if not await loop_check(self.bot):
             self.daily_vendor_rotation.cancel()
 
+    @tasks.loop(time=time(hour=1, minute=0, second=0, tzinfo=timezone.utc))
+    async def delete_emojis_loop(self):
+        await self.delete_emojis.start()
+
+    @delete_emojis_loop.before_loop
+    async def before_delete_emojis_loop(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(count=1)
     async def ada(self):
         await vendor_rotation(self.bot, self.logger, 350061650)
-        await asyncio.sleep(3600)
-        # Delete previous emojis
-        ada_guild_id = 1057710325631295590
-        ada_guild = self.bot.get_guild(ada_guild_id)
-        for emoji in ada_guild.emojis:
-            await ada_guild.delete_emoji(emoji)
 
     @tasks.loop(count=1)
     async def banshee(self):
         await vendor_rotation(self.bot, self.logger, 672118013)
-        await asyncio.sleep(3600)
-        # Delete previous emojis
-        banshee_guild_id = 1057709724843397282
-        banshee_guild = self.bot.get_guild(banshee_guild_id)
-        for emoji in banshee_guild.emojis:
-            await banshee_guild.delete_emoji(emoji)
 
     @tasks.loop(count=1)
     async def xur(self):
@@ -117,12 +120,16 @@ class Rotations(commands.Cog):
         else: # Xur is here
             await xur_rotation(self.bot, self.logger)
 
-        await asyncio.sleep(3600)
-        # Delete previous emojis
-        xur_guild_id = 1057711135668850688
-        guild = self.bot.get_guild(xur_guild_id)
-        for emoji in guild.emojis:
-            await guild.delete_emoji(emoji)
+    @tasks.loop(count=1)
+    async def delete_emojis(self):
+        xur_guid_id = 1057711135668850688
+        banshee_guild_id = 1057709724843397282
+        ada_guild_id = 1057710325631295590
+        guilds = [xur_guid_id, banshee_guild_id, ada_guild_id]
+        for guild_id in guilds:
+            guild = self.bot.get_guild(guild_id)
+            for emoji in guild.emojis:
+                await guild.delete_emoji(emoji)
 
 def setup(bot) -> None:
     bot.add_cog(Rotations(bot))
