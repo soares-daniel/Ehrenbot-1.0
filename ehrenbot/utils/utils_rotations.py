@@ -7,11 +7,13 @@ from typing import Union
 
 import aiohttp
 import discord
-from pymongo.collection import Collection
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.exceptions import (BungieMaintenance,
-                                       DestinyVendorNotFound, NoBungieResponse)
+from ehrenbot.utils.exceptions import (
+    BungieMaintenance,
+    DestinyVendorNotFound,
+    NoBungieResponse,
+)
 
 
 async def check_vendors(bot: Ehrenbot) -> str:
@@ -21,17 +23,20 @@ async def check_vendors(bot: Ehrenbot) -> str:
     token = token_collection.find_one({"discord_id": discord_id})["token"]
     profile = profile_collection.find_one({"discord_id": discord_id})["destiny_profile"]
     destiny2 = bot.destiny_client.destiny2
-    response = await destiny2.GetVendors(token=token,
-                                        character_id=profile["character_ids"][0],
-                                        destiny_membership_id=profile["destiny_membership_id"],
-                                        membership_type=profile["membership_type"],
-                                        components=[400])
+    response = await destiny2.GetVendors(
+        token=token,
+        character_id=profile["character_ids"][0],
+        destiny_membership_id=profile["destiny_membership_id"],
+        membership_type=profile["membership_type"],
+        components=[400],
+    )
     if not response:
         return "No response from Bungie API"
     if response["ErrorCode"] == 1:
         return "OK"
     if response["ErrorCode"] == 5:
         return "Maintenance"
+
 
 async def loop_check(bot: Ehrenbot) -> bool:
     """True if OK, False if no reponse.
@@ -43,10 +48,13 @@ async def loop_check(bot: Ehrenbot) -> bool:
         return False
     if status == "Maintenance":
         while status == "Maintenance":
-            bot.logger.warning("Bungie API is in maintenance mode, retrying in 5 minutes")
+            bot.logger.warning(
+                "Bungie API is in maintenance mode, retrying in 5 minutes"
+            )
             await asyncio.sleep(300)
             status = await check_vendors(bot)
     return True
+
 
 async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
     discord_id = bot.ADMIN_DISCORD_ID
@@ -57,12 +65,14 @@ async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
     destiny2 = bot.destiny_client.destiny2
     result = {}
     for character_id in profile["character_ids"]:
-        response = await destiny2.GetVendor(token=token,
-                                            character_id=character_id,
-                                            destiny_membership_id=profile["destiny_membership_id"],
-                                            membership_type=profile["membership_type"],
-                                            vendor_hash=vendor_hash,
-                                            components=[400,402,304,305])
+        response = await destiny2.GetVendor(
+            token=token,
+            character_id=character_id,
+            destiny_membership_id=profile["destiny_membership_id"],
+            membership_type=profile["membership_type"],
+            vendor_hash=vendor_hash,
+            components=[400, 402, 304, 305],
+        )
         if not response:
             raise NoBungieResponse
         if response["ErrorCode"] == 5:
@@ -72,8 +82,11 @@ async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
         result[character_id] = response["Response"]
     return result
 
+
 async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
-    channel: discord.TextChannel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
+    channel: discord.TextChannel = discord.utils.get(
+        bot.get_all_channels(), name="vendor-sales"
+    )
     if not channel:
         logger.error("Failed to find vendor-sales channel")
         return
@@ -91,7 +104,9 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
     else:
         await channel.send(content="", embed=embed)
         _id = channel.last_message_id
-        rotation_collection.update_one({"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True)
+        rotation_collection.update_one(
+            {"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True
+        )
     logger.debug("Sent embed for vendor %s", vendor_hash)
 
 
@@ -104,7 +119,11 @@ async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) ->
             if date_str == current_date:
                 logger.info("Vendor rotation already in database")
                 return True
-        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"armor": [], "weapons": []}}, upsert=True)
+        destiny_rotation.update_one(
+            {"vendor_hash": vendor_hash},
+            {"$set": {"armor": [], "weapons": []}},
+            upsert=True,
+        )
         data = await get_vendor_data(bot=bot, vendor_hash=vendor_hash)
 
         modified_data = {"vendor": {}, "sales": {}, "stats": {}, "sockets": {}}
@@ -130,9 +149,14 @@ async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) ->
         return False
     else:
         logger.debug("%d sales modified, processing...", vendor_hash)
-        return await process_vendor_sales(bot=bot, logger=logger, vendor_hash=vendor_hash, data=modified_data)
+        return await process_vendor_sales(
+            bot=bot, logger=logger, vendor_hash=vendor_hash, data=modified_data
+        )
 
-async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, data: dict) -> bool:
+
+async def process_vendor_sales(
+    bot: Ehrenbot, logger: Logger, vendor_hash: int, data: dict
+) -> bool:
     try:
         armor = {}
         weapons = {}
@@ -146,7 +170,9 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
             with open("data/vendor_sale_item.json", "r", encoding="utf-8") as file:
                 templates = json.load(file)
             item_hash = sales_data[item]["itemHash"]
-            item_definition = await bot.destiny_client.decode_hash(item_hash,"DestinyInventoryItemDefinition")
+            item_definition = await bot.destiny_client.decode_hash(
+                item_hash, "DestinyInventoryItemDefinition"
+            )
             item_categories = item_definition["itemCategoryHashes"]
             if 59 in item_categories:
                 item_template = templates["Mods"]
@@ -157,7 +183,9 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
 
             if 41 in item_categories:
                 item_template = templates["Shaders"]
-                item_definition = await bot.destiny_client.decode_hash(item_hash,"DestinyInventoryItemDefinition")
+                item_definition = await bot.destiny_client.decode_hash(
+                    item_hash, "DestinyInventoryItemDefinition"
+                )
                 item_hash = sales_data[item]["itemHash"]
                 item_template["definition"] = item_definition
                 item_template["item_hash"] = item_hash
@@ -166,7 +194,9 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
 
             if 1 in item_categories:
                 item_template = templates["Weapons"]
-                with open("data/weapon_stat_arrangement.json", "r", encoding="utf-8") as file:
+                with open(
+                    "data/weapon_stat_arrangement.json", "r", encoding="utf-8"
+                ) as file:
                     weapon_stat_arrangements = json.load(file)
                 for category in item_categories:
                     category = str(category)
@@ -177,10 +207,23 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
 
             elif 20 in item_categories:
                 item_template = templates["Armor"]
-                stat_arrangement = {"Armor": ["Mobility", "Resilience", "Recovery", "Discipline", "Intellect", "Strength"]}
+                stat_arrangement = {
+                    "Armor": [
+                        "Mobility",
+                        "Resilience",
+                        "Recovery",
+                        "Discipline",
+                        "Intellect",
+                        "Strength",
+                    ]
+                }
                 item_template["item_type"] = item_definition["itemTypeDisplayName"]
                 # Specific armor types for classes
-                if item_template["item_type"] in ["Warlock Bond", "Titan Mark", "Hunter Cloak"]:
+                if item_template["item_type"] in [
+                    "Warlock Bond",
+                    "Titan Mark",
+                    "Hunter Cloak",
+                ]:
                     item_template["item_type"] = "Class Item"
                 classes = {21: "Warlock", 22: "Titan", 23: "Hunter"}
                 for category in item_categories:
@@ -194,9 +237,16 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
             item_template["item_hash"] = item_hash
             item_template["costs"] = sales_data[item]["costs"]
             item_stats = stats_data[item]["stats"]
-            item_template = await process_item_stats(bot=bot, item_template=item_template, item_stats=item_stats, stat_arrangement=stat_arrangement)
+            item_template = await process_item_stats(
+                bot=bot,
+                item_template=item_template,
+                item_stats=item_stats,
+                stat_arrangement=stat_arrangement,
+            )
             item_sockets = sockets_data[item]["sockets"]
-            item_template = await process_item_sockets(bot=bot, item_template=item_template, item_sockets=item_sockets)
+            item_template = await process_item_sockets(
+                bot=bot, item_template=item_template, item_sockets=item_sockets
+            )
 
             if 20 in item_categories:
                 armor[str(item_hash)] = item_template
@@ -208,35 +258,54 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         return False
     else:
         destiny_rotation = bot.database["destiny_rotation"]
-        destiny_rotation.update_one({"vendor_hash": vendor_hash}, {"$set": {"vendor": data["vendor"]["data"]}}, upsert=True)
+        destiny_rotation.update_one(
+            {"vendor_hash": vendor_hash},
+            {"$set": {"vendor": data["vendor"]["data"]}},
+            upsert=True,
+        )
         if armor:
-            destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                                        {"$set": {"armor": armor}},
-                                        upsert=True)
+            destiny_rotation.update_one(
+                {"vendor_hash": vendor_hash}, {"$set": {"armor": armor}}, upsert=True
+            )
         if weapons:
-            destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                                        {"$set": {"weapons": weapons}},
-                                        upsert=True)
+            destiny_rotation.update_one(
+                {"vendor_hash": vendor_hash},
+                {"$set": {"weapons": weapons}},
+                upsert=True,
+            )
         if mods:
-            destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                                        {"$set": {"mods": mods}},
-                                        upsert=True)
+            destiny_rotation.update_one(
+                {"vendor_hash": vendor_hash}, {"$set": {"mods": mods}}, upsert=True
+            )
         if shaders:
-            destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                                        {"$set": {"shaders": shaders}},
-                                        upsert=True)
-        destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                                    {"$set": {"date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
-                            upsert=True)
+            destiny_rotation.update_one(
+                {"vendor_hash": vendor_hash},
+                {"$set": {"shaders": shaders}},
+                upsert=True,
+            )
+        destiny_rotation.update_one(
+            {"vendor_hash": vendor_hash},
+            {
+                "$set": {
+                    "date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                }
+            },
+            upsert=True,
+        )
         logger.debug("Vendor sales processed")
         return True
 
-async def process_item_sockets(bot: Ehrenbot, item_template: dict, item_sockets) -> dict:
+
+async def process_item_sockets(
+    bot: Ehrenbot, item_template: dict, item_sockets
+) -> dict:
     for socket in item_sockets:
         if not socket.get("plugHash"):
             continue
         plug_hash = socket["plugHash"]
-        socket_definition = await bot.destiny_client.decode_hash(plug_hash, "DestinyInventoryItemDefinition")
+        socket_definition = await bot.destiny_client.decode_hash(
+            plug_hash, "DestinyInventoryItemDefinition"
+        )
         socket_type = socket_definition["itemTypeDisplayName"]
         if socket_type not in item_template["sockets"]:
             item_template["sockets"][socket_type] = {}
@@ -245,24 +314,25 @@ async def process_item_sockets(bot: Ehrenbot, item_template: dict, item_sockets)
         socket_dict = {
             "socket_hash": plug_hash,
             "socket_name": socket_name,
-            "socket_description": socket_description
+            "socket_description": socket_description,
         }
         item_template["sockets"][socket_type][socket_name] = socket_dict
     return item_template
 
-async def process_item_stats(bot: Ehrenbot, item_template: dict, item_stats: dict, stat_arrangement: dict) -> dict:
+
+async def process_item_stats(
+    bot: Ehrenbot, item_template: dict, item_stats: dict, stat_arrangement: dict
+) -> dict:
     unsorted_stats = {}
     for stat in item_stats:
         stat = item_stats[stat]
         stat_hash = stat["statHash"]
         stat_value = stat["value"]
-        stat_definition = await bot.destiny_client.decode_hash(stat_hash, "DestinyStatDefinition")
+        stat_definition = await bot.destiny_client.decode_hash(
+            stat_hash, "DestinyStatDefinition"
+        )
         stat_name = stat_definition["displayProperties"]["name"]
-        stat = {
-            "stat_hash": stat_hash,
-            "stat_name": stat_name,
-            "value": stat_value
-        }
+        stat = {"stat_hash": stat_hash, "stat_name": stat_name, "value": stat_value}
         unsorted_stats[stat_name] = stat
     sorted_stats = {}
     for _stat in stat_arrangement:
@@ -271,44 +341,72 @@ async def process_item_stats(bot: Ehrenbot, item_template: dict, item_stats: dic
     item_template["stats"] = sorted_stats
     return item_template
 
+
 async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
     try:
         destiny_rotation = bot.database["destiny_rotation"]
-        vendor = await bot.destiny_client.decode_hash(vendor_hash, "DestinyVendorDefinition")
-        destiny_rotation.update_one({"vendor_hash": vendor_hash},
-                                    {"$set": {"vendor": vendor}}, upsert=True)
+        vendor = await bot.destiny_client.decode_hash(
+            vendor_hash, "DestinyVendorDefinition"
+        )
+        destiny_rotation.update_one(
+            {"vendor_hash": vendor_hash}, {"$set": {"vendor": vendor}}, upsert=True
+        )
     except Exception as ex:
         logger.exception("Error getting vendor info: %s", ex)
     else:
         logger.debug("%d info updated", vendor_hash)
         return True
 
-async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, vendor_hash: int, item_definition: dict) -> Union[discord.Emoji, None]:
+
+async def create_emoji_from_entry(
+    bot: Ehrenbot, logger: Logger, vendor_hash: int, item_definition: dict
+) -> Union[discord.Emoji, None]:
     try:
         item_hash = item_definition["hash"]
         item_name = item_definition["displayProperties"]["name"]
         item_icon = item_definition["displayProperties"]["icon"]
         # Replace all non-alphanumeric characters with underscores in the middle of the name
-        item_name = item_name.replace(":", "_").replace("-", "_").replace(".", "_").replace("'", "_").replace("(", "_").replace(")", "_").replace(" ", "_")
+        item_name = (
+            item_name.replace(":", "_")
+            .replace("-", "_")
+            .replace(".", "_")
+            .replace("'", "_")
+            .replace("(", "_")
+            .replace(")", "_")
+            .replace(" ", "_")
+        )
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://www.bungie.net{item_icon}") as resp:
                 if resp.status != 200:
-                    raise aiohttp.ClientError(f"Error fetching image: {resp.status} {resp.reason}")
+                    raise aiohttp.ClientError(
+                        f"Error fetching image: {resp.status} {resp.reason}"
+                    )
                 data = await resp.read()
-                emoji = await bot.get_guild(bot.vendor_guild_id).create_custom_emoji(name=item_name, image=data)
+                emoji = await bot.get_guild(bot.vendor_guild_id).create_custom_emoji(
+                    name=item_name, image=data
+                )
     except aiohttp.ClientError as ex:
         logger.error("%s", ex)
         return None
     except Exception as ex:
-        logger.exception("Error creating emoji with item_definition %s:\n %s", item_definition, ex)
+        logger.exception(
+            "Error creating emoji with item_definition %s:\n %s", item_definition, ex
+        )
         return None
     else:
         logger.debug("Emoji created for %d", item_hash)
         emoji_collection = bot.database["emojis"]
-        emoji_collection.insert_one({"emoji_id": emoji.id, "guild_id": bot.vendor_guild_id, "vendor_hash": vendor_hash})
+        emoji_collection.insert_one(
+            {
+                "emoji_id": emoji.id,
+                "guild_id": bot.vendor_guild_id,
+                "vendor_hash": vendor_hash,
+            }
+        )
         return emoji
 
-async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> discord.Embed:
+
+async def vendor_embed(bot: Ehrenbot, vendor_hash: int) -> discord.Embed:
     match vendor_hash:
         case 672118013:
             bot.vendor_guild_id = 1057709724843397282
@@ -321,31 +419,45 @@ async def vendor_embed(bot: Ehrenbot, vendor_hash:int) -> discord.Embed:
 
     # Set footer
     current_time = datetime.datetime.now(timezone.utc)
-    embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    embed.set_footer(
+        text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    )
     return embed
 
+
 async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
-    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
+    daily_rotation = bot.database["destiny_rotation"].find_one(
+        {"vendor_hash": vendor_hash}
+    )
     weapons = daily_rotation["weapons"]
     weapon_string = ""
     for weapon in weapons:
         if weapons[weapon]["definition"]["inventory"]["tierType"] == 6:
             continue
         item_name = weapons[weapon]["definition"]["displayProperties"]["name"]
-        emoji: discord.Emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash,
-                                                             item_definition=weapons[weapon]["definition"])
+        emoji: discord.Emoji = await create_emoji_from_entry(
+            bot=bot,
+            logger=bot.logger,
+            vendor_hash=vendor_hash,
+            item_definition=weapons[weapon]["definition"],
+        )
         weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return weapon_string
 
+
 async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> str:
-    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
+    daily_rotation = bot.database["destiny_rotation"].find_one(
+        {"vendor_hash": vendor_hash}
+    )
     armor = daily_rotation["armor"]
     sort_to = ["Helmet", "Gauntlets", "Chest Armor", "Leg Armor", "Class Item"]
     # Create a dictionary that maps each item_type to its sort order
     type_order = {type: i for i, type in enumerate(sort_to)}
 
     # Sort the armor dictionary based on the item_type sort order
-    armor = dict(sorted(armor.items(), key=lambda item: type_order[item[1]["item_type"]]))
+    armor = dict(
+        sorted(armor.items(), key=lambda item: type_order[item[1]["item_type"]])
+    )
 
     armor_string = ""
     for armor_piece in armor:
@@ -354,36 +466,60 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
         if armor[armor_piece]["definition"]["inventory"]["tierType"] == 6:
             continue
         item_name = armor[armor_piece]["definition"]["displayProperties"]["name"]
-        emoji: discord.Emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash,
-                                                             item_definition=armor[armor_piece]["definition"])
+        emoji: discord.Emoji = await create_emoji_from_entry(
+            bot=bot,
+            logger=bot.logger,
+            vendor_hash=vendor_hash,
+            item_definition=armor[armor_piece]["definition"],
+        )
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return armor_string
 
+
 async def shader_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
-    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
+    daily_rotation = bot.database["destiny_rotation"].find_one(
+        {"vendor_hash": vendor_hash}
+    )
     shaders = daily_rotation["shaders"]
     shader_string = ""
     for shader in shaders:
         item_name = shaders[shader]["definition"]["displayProperties"]["name"]
-        emoji: discord.Emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash,
-                                                             item_definition=shaders[shader]["definition"])
+        emoji: discord.Emoji = await create_emoji_from_entry(
+            bot=bot,
+            logger=bot.logger,
+            vendor_hash=vendor_hash,
+            item_definition=shaders[shader]["definition"],
+        )
         shader_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return shader_string
 
+
 async def banshee_embed(bot: Ehrenbot) -> discord.Embed:
-    embed = discord.Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.", color=0x567e9d)
+    embed = discord.Embed(
+        title="Banshee-44",
+        description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.",
+        color=0x567E9D,
+    )
     vendor_hash = 672118013
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/banshee-icon.png")
-    embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/3142923bc72bcd5a769badc26bd8b508.jpg")
+    embed.set_image(
+        url="https://www.bungie.net/common/destiny2_content/icons/3142923bc72bcd5a769badc26bd8b508.jpg"
+    )
     weapon_string = await weapon_embed_field(bot, vendor_hash)
     embed.add_field(name="Weapons", value=weapon_string, inline=True)
     return embed
 
+
 async def ada_embed(bot: Ehrenbot) -> discord.Embed:
-    embed = discord.Embed(title="Ada-1", description="Ada-1 is a vendor in the Tower who sells armor and armor mods.")
+    embed = discord.Embed(
+        title="Ada-1",
+        description="Ada-1 is a vendor in the Tower who sells armor and armor mods.",
+    )
     vendor_hash = 350061650
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/ada-icon.png")
-    embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/e6a489d1386e2928f9a5a33b775b8f03.jpg")
+    embed.set_image(
+        url="https://www.bungie.net/common/destiny2_content/icons/e6a489d1386e2928f9a5a33b775b8f03.jpg"
+    )
     shader_string = await shader_embed_field(bot, vendor_hash)
     embed.add_field(name="Shaders", value=shader_string, inline=True)
     warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")

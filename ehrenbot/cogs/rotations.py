@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_rotations import vendor_rotation, loop_check
+from ehrenbot.utils.utils_rotations import loop_check, vendor_rotation
 from ehrenbot.utils.xur import xur_rotation
 
 
@@ -24,29 +24,37 @@ class Rotations(commands.Cog):
         self.daily_vendor_rotation.cancel()
 
     def get_reset_time() -> time:
-        return time(hour=17, minute=1, second=0, tzinfo=timezone.utc) # 1 minute after reset to prevent downtime issues
+        return time(
+            hour=17, minute=1, second=0, tzinfo=timezone.utc
+        )  # 1 minute after reset to prevent downtime issues
 
-    rotation = discord.SlashCommandGroup(name="rotation", description="Commands to start Destiny 2 vendor rotations manually.")
+    rotation = discord.SlashCommandGroup(
+        name="rotation",
+        description="Commands to start Destiny 2 vendor rotations manually.",
+    )
 
     @rotation.command(name="banshee", description="Start Banshee-44 rotation manually.")
     async def rotation_banshee_ada(self, ctx: discord.ApplicationContext):
-        """ Start Banshee-44 rotation manually. """
+        """Start Banshee-44 rotation manually."""
         self.banshee.start()
         await ctx.respond("Banshee-44 rotation started.", delete_after=2)
 
     @rotation.command(name="ada", description="Start Ada-1 rotation manually.")
     async def rotation_ada(self, ctx: discord.ApplicationContext):
-        """ Start Ada-1 rotation manually. """
+        """Start Ada-1 rotation manually."""
         self.ada.start()
         await ctx.respond("Ada-1 rotation started.", delete_after=2)
 
     @rotation.command(name="xur", description="Start Xur rotation manually.")
     async def rotation_xur(self, ctx: discord.ApplicationContext):
-        """ Start Xur rotation manually. """
+        """Start Xur rotation manually."""
         self.xur.start()
         await ctx.respond("Xur rotation started.", delete_after=2)
 
-    @rotation.command(name="del_emojis", description="Deletes all emojis from a guild. ONLY USE ON ROTATION SERVERS!")
+    @rotation.command(
+        name="del_emojis",
+        description="Deletes all emojis from a guild. ONLY USE ON ROTATION SERVERS!",
+    )
     async def del_emojis(self, ctx: discord.ApplicationContext, guild_id: int = 0):
         await ctx.defer()
         if guild_id == 0:
@@ -56,11 +64,14 @@ class Rotations(commands.Cog):
             await guild.delete_emoji(emoji)
         await ctx.respond(f"Deleted all emojis from guild {guild_id}", delete_after=5)
 
-    @rotation.command(name="del_emoji_all", description="Deletes all emojis from all rotation servers")
+    @rotation.command(
+        name="del_emoji_all", description="Deletes all emojis from all rotation servers"
+    )
     async def del_emoji_all(self, ctx: discord.ApplicationContext):
         await self.delete_emojis.start()
-        await ctx.respond("Deleting emojis from all rotation servers...", delete_after=5)
-
+        await ctx.respond(
+            "Deleting emojis from all rotation servers...", delete_after=5
+        )
 
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
@@ -95,28 +106,44 @@ class Rotations(commands.Cog):
         self.logger.debug("Starting Xur rotation...")
         weekdays = [1, 2, 3]
         if date.today().weekday() in weekdays:
-            embed = discord.Embed(title="Xûr", description="Xur is not here today. He will return again on **Friday.**", color=0xcdad36)
+            embed = discord.Embed(
+                title="Xûr",
+                description="Xur is not here today. He will return again on **Friday.**",
+                color=0xCDAD36,
+            )
             embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
-            embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg")
+            embed.set_image(
+                url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg"
+            )
             current_time = datetime.now(timezone.utc)
-            embed.set_footer(text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
+            embed.set_footer(
+                text=f"Last updated: {current_time.strftime('%Y-%m-%d %H:%M:%S')} UTC"
+            )
 
             # Send embed to vendor channel
             rotation_collection = self.bot.database["destiny_rotation"]
             entry = rotation_collection.find_one({"vendor_hash": 2190858386})
             if entry is None:
-                rotation_collection.insert_one({"vendor_hash": 2190858386, "message_id": 0})
+                rotation_collection.insert_one(
+                    {"vendor_hash": 2190858386, "message_id": 0}
+                )
             entry = rotation_collection.find_one({"vendor_hash": 2190858386})
             if entry["message_id"] == 0:
-                channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
+                channel = discord.utils.get(
+                    self.bot.get_all_channels(), name="vendor-sales"
+                )
                 message = await channel.send(content="", embed=embed)
-                rotation_collection.update_one({"vendor_hash": 2190858386}, {"$set": {"message_id": message.id}})
+                rotation_collection.update_one(
+                    {"vendor_hash": 2190858386}, {"$set": {"message_id": message.id}}
+                )
             else:
                 message_id = entry["message_id"]
-                channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
+                channel = discord.utils.get(
+                    self.bot.get_all_channels(), name="vendor-sales"
+                )
                 message = await channel.fetch_message(message_id)
                 await message.edit(content="", embed=embed)
-        else: # Xur is here
+        else:  # Xur is here
             await xur_rotation(self.bot, self.logger)
 
     @tasks.loop(count=1)
@@ -129,6 +156,7 @@ class Rotations(commands.Cog):
             guild = self.bot.get_guild(guild_id)
             for emoji in guild.emojis:
                 await guild.delete_emoji(emoji)
+
 
 def setup(bot) -> None:
     bot.add_cog(Rotations(bot))
