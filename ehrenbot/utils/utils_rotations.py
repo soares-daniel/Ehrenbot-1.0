@@ -72,6 +72,29 @@ async def get_vendor_data(bot: Ehrenbot, vendor_hash: int) -> dict:
         result[character_id] = response["Response"]
     return result
 
+async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
+    channel: discord.TextChannel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
+    if not channel:
+        logger.error("Failed to find vendor-sales channel")
+        return
+    logger.info("Starting daily vendor rotation...")
+    # Fetch vendor sales and send embeds
+    rotation_collection = bot.database["destiny_rotation"]
+    if not await fetch_vendor_sales(bot=bot, logger=logger, vendor_hash=vendor_hash):
+        logger.error("Failed to fetch vendor sales for vendor %s", vendor_hash)
+        return
+    embed = await vendor_embed(bot=bot, vendor_hash=vendor_hash)
+    entry = rotation_collection.find_one({"vendor_hash": vendor_hash})
+    if _id := entry.get("message_id"):
+        message = await channel.fetch_message(_id)
+        await message.edit(content="", embed=embed)
+    else:
+        await channel.send(content="", embed=embed)
+        _id = channel.last_message_id
+        rotation_collection.update_one({"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True)
+    logger.debug("Sent embed for vendor %s", vendor_hash)
+
+
 async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
     try:
         current_date = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -114,6 +137,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         armor = {}
         weapons = {}
         mods = {}
+        shaders = {}
         sales_data = data["sales"]
         stats_data = data["stats"]
         sockets_data = data["sockets"]
@@ -131,6 +155,15 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
                 mods[str(item_hash)] = item_template
                 continue
 
+            if 41 in item_categories:
+                item_template = templates["Shaders"]
+                item_definition = await bot.destiny_client.decode_hash(item_hash,"DestinyInventoryItemDefinition")
+                item_hash = sales_data[item]["itemHash"]
+                item_template["definition"] = item_definition
+                item_template["item_hash"] = item_hash
+                shaders[str(item_hash)] = item_template
+                continue
+
             if 1 in item_categories:
                 item_template = templates["Weapons"]
                 with open("data/weapon_stat_arrangement.json", "r", encoding="utf-8") as file:
@@ -142,7 +175,7 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
                         break
                     stat_arrangement = weapon_stat_arrangements["Default"]
 
-            elif 20 in item_categories:
+            if 20 in item_categories:
                 item_template = templates["Armor"]
                 stat_arrangement = {"Armor": ["Mobility", "Resilience", "Recovery", "Discipline", "Intellect", "Strength"]}
                 classes = {21: "Warlock", 22: "Titan", 23: "Hunter"}
@@ -150,6 +183,11 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
                     if category in classes:
                         item_template["class"] = classes[category]
                         break
+                item_template["item_type"] = item_definition["itemTypeDisplayName"]
+                # Specific armor types for classes
+                if item_template["item_type"] in ["Warlock Bond", "Titan Mark", "Hunter Cloak"]:
+                    item_template["item_type"] = "Class Item"
+
             else:
                 continue
 
@@ -183,6 +221,10 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
         if mods:
             destiny_rotation.update_one({"vendor_hash": vendor_hash},
                                         {"$set": {"mods": mods}},
+                                        upsert=True)
+        if shaders:
+            destiny_rotation.update_one({"vendor_hash": vendor_hash},
+                                        {"$set": {"shaders": shaders}},
                                         upsert=True)
         destiny_rotation.update_one({"vendor_hash": vendor_hash},
                                     {"$set": {"date": datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
@@ -242,31 +284,6 @@ async def vendor_info(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
         logger.debug("%d info updated", vendor_hash)
         return True
 
-async def banshee_ada_rotation(bot: Ehrenbot, logger: Logger):
-    channel: discord.TextChannel = discord.utils.get(bot.get_all_channels(), name="vendor-sales")
-    if not channel:
-        logger.error("Failed to find vendor-sales channel")
-        return
-    logger.info("Starting daily vendor rotation...")
-    # Fetch vendor sales and send embeds
-    rotation_collection = bot.database["destiny_rotation"]
-    vendor_hashes = [672118013, 350061650]
-    for vendor_hash in vendor_hashes:
-        if not await fetch_vendor_sales(bot=bot, logger=logger, vendor_hash=vendor_hash):
-            logger.error("Failed to fetch vendor sales for vendor %s", vendor_hash)
-            return
-        embed = await vendor_embed(bot=bot, vendor_hash=vendor_hash)
-        entry = rotation_collection.find_one({"vendor_hash": vendor_hash})
-        if _id := entry.get("message_id"):
-            message = await channel.fetch_message(_id)
-            await message.edit(content="", embed=embed)
-        else:
-            await channel.send(content="", embed=embed)
-            _id = channel.last_message_id
-            rotation_collection.update_one({"vendor_hash": vendor_hash}, {"$set": {"message_id": _id}}, upsert=True)
-        logger.debug("Sent embed for vendor %s", vendor_hash)
-    logger.info("Daily vendor rotation complete")
-
 async def create_emoji_from_entry(bot: Ehrenbot, logger: Logger, vendor_hash: int, item_definition: dict) -> Union[discord.Emoji, None]:
     try:
         item_hash = item_definition["hash"]
@@ -324,6 +341,13 @@ async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
 async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> str:
     daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
     armor = daily_rotation["armor"]
+    sort_to = ["Helmet", "Gauntlets", "Chest Armor", "Leg Armor", "Class Item"]
+    # Create a dictionary that maps each item_type to its sort order
+    type_order = {type: i for i, type in enumerate(sort_to)}
+
+    # Sort the armor dictionary based on the item_type sort order
+    armor = dict(sorted(armor.items(), key=lambda item: type_order[item[1]["item_type"]]))
+
     armor_string = ""
     for armor_piece in armor:
         if armor[armor_piece]["class"] != category:
@@ -335,6 +359,17 @@ async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> s
                                                              item_definition=armor[armor_piece]["definition"])
         armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return armor_string
+
+async def shader_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
+    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
+    shaders = daily_rotation["shaders"]
+    shader_string = ""
+    for shader in shaders:
+        item_name = shaders[shader]["definition"]["displayProperties"]["name"]
+        emoji: discord.Emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash,
+                                                             item_definition=shaders[shader]["definition"])
+        shader_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
+    return shader_string
 
 async def banshee_embed(bot: Ehrenbot) -> discord.Embed:
     embed = discord.Embed(title="Banshee-44", description="Banshee-44 is a vendor in the Tower who sells weapons and weapon mods.", color=0x567e9d)
@@ -350,6 +385,8 @@ async def ada_embed(bot: Ehrenbot) -> discord.Embed:
     vendor_hash = 350061650
     embed.set_thumbnail(url="https://www.light.gg/Content/Images/ada-icon.png")
     embed.set_image(url="https://www.bungie.net/common/destiny2_content/icons/e6a489d1386e2928f9a5a33b775b8f03.jpg")
+    shader_string = await shader_embed_field(bot, vendor_hash)
+    embed.add_field(name="Shaders", value=shader_string, inline=True)
     warlock_string = await armor_embed_field(bot, vendor_hash, "Warlock")
     embed.add_field(name="Warlock", value=warlock_string, inline=False)
     titan_string = await armor_embed_field(bot, vendor_hash, "Titan")

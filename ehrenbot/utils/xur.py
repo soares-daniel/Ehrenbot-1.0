@@ -47,10 +47,8 @@ async def exotic_armor_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     for item in armor:
         if armor[item]["definition"]["inventory"]["tierType"] != 6:
             continue
-        item_hash = armor[item]["item_hash"]
         item_name = armor[item]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=intenvory_item_collection, vendor_hash=vendor_hash)
+        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash, item_definition=armor[item]["definition"])
         exotic_armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return exotic_armor_string
 
@@ -63,10 +61,8 @@ async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
     for item in weapons:
         if weapons[item]["definition"]["inventory"]["tierType"] != 6:
             continue
-        item_hash = weapons[item]["item_hash"]
         item_name = weapons[item]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_hash=item_hash,
-                                              collection=intenvory_item_collection, vendor_hash=vendor_hash)
+        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, vendor_hash=vendor_hash, item_definition=weapons[item]["definition"])
         exotic_weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return exotic_weapon_string
 

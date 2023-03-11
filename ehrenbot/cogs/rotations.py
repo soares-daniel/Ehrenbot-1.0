@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_rotations import banshee_ada_rotation, loop_check
+from ehrenbot.utils.utils_rotations import vendor_rotation, loop_check
 from ehrenbot.utils.xur import xur_rotation
 
 
@@ -28,17 +28,23 @@ class Rotations(commands.Cog):
 
     rotation = discord.SlashCommandGroup(name="rotation", description="Commands to start Destiny 2 vendor rotations manually.")
 
-    @rotation.command(name="banshee_ada", description="Start Banshee-44 and Ada-1 rotation manually.")
+    @rotation.command(name="banshee", description="Start Banshee-44 rotation manually.")
     async def rotation_banshee_ada(self, ctx: discord.ApplicationContext):
-        """ Start Banshee-44 and Ada-1 rotation manually. """
-        self.banshee_ada.start()
-        await ctx.respond("Banshee-44 and Ada-1 rotation started.", delete_after=5)
+        """ Start Banshee-44 rotation manually. """
+        self.banshee.start()
+        await ctx.respond("Banshee-44 rotation started.", delete_after=2)
+
+    @rotation.command(name="ada", description="Start Ada-1 rotation manually.")
+    async def rotation_ada(self, ctx: discord.ApplicationContext):
+        """ Start Ada-1 rotation manually. """
+        self.ada.start()
+        await ctx.respond("Ada-1 rotation started.", delete_after=2)
 
     @rotation.command(name="xur", description="Start Xur rotation manually.")
     async def rotation_xur(self, ctx: discord.ApplicationContext):
         """ Start Xur rotation manually. """
         self.xur.start()
-        await ctx.respond("Xur rotation started.", delete_after=5)
+        await ctx.respond("Xur rotation started.", delete_after=2)
 
     @rotation.command(name="del_emojis", description="Deletes all emojis from a guild. ONLY USE ON ROTATION SERVERS!")
     async def del_emojis(self, ctx: discord.ApplicationContext, guild_id: int = 0):
@@ -52,7 +58,8 @@ class Rotations(commands.Cog):
 
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
-        self.banshee_ada.start()
+        self.banshee.start()
+        self.ada.start()
         self.xur.start()
 
     @daily_vendor_rotation.before_loop
@@ -62,17 +69,22 @@ class Rotations(commands.Cog):
             self.daily_vendor_rotation.cancel()
 
     @tasks.loop(count=1)
-    async def banshee_ada(self):
-        await banshee_ada_rotation(self.bot, self.logger)
+    async def ada(self):
+        await vendor_rotation(self.bot, self.logger, 350061650)
+        await asyncio.sleep(3600)
+        # Delete previous emojis
+        ada_guild_id = 1057710325631295590
+        ada_guild = self.bot.get_guild(ada_guild_id)
+        for emoji in ada_guild.emojis:
+            await ada_guild.delete_emoji(emoji)
 
+    @tasks.loop(count=1)
+    async def banshee(self):
+        await vendor_rotation(self.bot, self.logger, 672118013)
         await asyncio.sleep(3600)
         # Delete previous emojis
         banshee_guild_id = 1057709724843397282
-        ada_guild_id = 1057710325631295590
-        ada_guild = self.bot.get_guild(ada_guild_id)
         banshee_guild = self.bot.get_guild(banshee_guild_id)
-        for emoji in ada_guild.emojis:
-            await ada_guild.delete_emoji(emoji)
         for emoji in banshee_guild.emojis:
             await banshee_guild.delete_emoji(emoji)
 
@@ -80,6 +92,7 @@ class Rotations(commands.Cog):
     async def xur(self):
         self.logger.debug("Starting Xur rotation...")
         weekdays = [1, 2, 3]
+        print(date.today().weekday())
         if date.today().weekday() in weekdays:
             embed = discord.Embed(title="Xûr", description="Xur is not here today. He will return again on **Friday.**", color=0xcdad36)
             embed.set_thumbnail(url="https://www.light.gg/Content/Images/xur-icon.png")
@@ -102,11 +115,8 @@ class Rotations(commands.Cog):
                 channel = discord.utils.get(self.bot.get_all_channels(), name="vendor-sales")
                 message = await channel.fetch_message(message_id)
                 await message.edit(content="", embed=embed)
-
-        elif date.today().weekday() == 4:
+        else: # Xur is here
             await xur_rotation(self.bot, self.logger)
-        else:
-            return
 
         await asyncio.sleep(3600)
         # Delete previous emojis

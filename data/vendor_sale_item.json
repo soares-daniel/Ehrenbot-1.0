@@ -13,6 +13,7 @@
     "item_hash": 0,
     "costs": {},
     "class": "",
+    "item_type": "",
     "stats": {},
     "sockets": {
       "Intrinsic": {}
@@ -20,6 +21,11 @@
   },
   "Mods": {
     "category_hash": 59,
+    "definition": {},
+    "item_hash": 0
+  },
+  "Shaders": {
+    "category_hash": 41,
     "definition": {},
     "item_hash": 0
   }
