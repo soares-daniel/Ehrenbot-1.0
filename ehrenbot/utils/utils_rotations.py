@@ -175,19 +175,18 @@ async def process_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int, 
                         break
                     stat_arrangement = weapon_stat_arrangements["Default"]
 
-            if 20 in item_categories:
+            elif 20 in item_categories:
                 item_template = templates["Armor"]
                 stat_arrangement = {"Armor": ["Mobility", "Resilience", "Recovery", "Discipline", "Intellect", "Strength"]}
+                item_template["item_type"] = item_definition["itemTypeDisplayName"]
+                # Specific armor types for classes
+                if item_template["item_type"] in ["Warlock Bond", "Titan Mark", "Hunter Cloak"]:
+                    item_template["item_type"] = "Class Item"
                 classes = {21: "Warlock", 22: "Titan", 23: "Hunter"}
                 for category in item_categories:
                     if category in classes:
                         item_template["class"] = classes[category]
                         break
-                item_template["item_type"] = item_definition["itemTypeDisplayName"]
-                # Specific armor types for classes
-                if item_template["item_type"] in ["Warlock Bond", "Titan Mark", "Hunter Cloak"]:
-                    item_template["item_type"] = "Class Item"
-
             else:
                 continue
 

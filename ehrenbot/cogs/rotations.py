@@ -1,5 +1,4 @@
 # pylint: disable=E0211,E1121,C0206,E1123
-import asyncio
 import logging
 from datetime import date, datetime, time, timezone
 
