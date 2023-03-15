@@ -128,6 +128,8 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
                 continue
             if missing_shaders == "You have all shaders!":
                 continue  # Placeholder
+            if missing_shaders == "No shaders are being sold that you are missing!":
+                continue
             if missing_shaders == []:
                 continue
             member = await bot.fetch_user(member_id)
@@ -137,7 +139,8 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
             shaders_text = "\n".join(missing_shaders) # TODO: Add shaders to text
             await member.send(
                 "You are missing shaders from Ada-1! Go pick them up before it's too late!\n\n"
-                f"Reset: **{reset_time.strftime('%Y-%m-%d')} 17:00:00 UTC**"
+                f"{shaders_text}\n\n"
+                f"Reset: **{reset_time.strftime('%d-%m-%y')} 18:00:00 UTC**"
             )
             logger.debug("Sent notification to %s. Missing mods are ", member_id)
 
@@ -594,32 +597,42 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
             if collectibles[collectible]["state"] % 2 == 1
         ]
 
-        # Get shaders from not acquired collectibles
-        final = []
+        # Convert to itemHashes and filter out shaders
+        item_hashes = []
         shaders = bot.database["destiny_shaders"]
-        for shader in shaders.find():
-            if shader["hash"] in not_acquired:
-                final.append(shader["itemHash"])
+        for collectible in not_acquired:
+            response = await bot.destiny_client.decode_hash(collectible, "DestinyCollectibleDefinition")
+            item_hash = response["itemHash"]
+            item_hashes.append(item_hash)
 
-        # Get available shaders
-        if not final:
+        # Get all shaders
+        missing_shader = []
+        for shader in shaders.find():
+            if shader["hash"] in item_hashes:
+                missing_shader.append(shader["hash"])
+        if not missing_shader:
             logger.info("No missing shaders for %d", discord_id)
             return "You have all shaders!"
+
+        # Get available shaders
         rotation_collection = bot.database["destiny_rotation"]
-        shader = rotation_collection.find_one({"vendor_hash": 350061650})["shaders"]
-        missing_shader = []
-        for shader in shaders:
-            shader = shaders[shader]
-            if shader["item_hash"] in final:
+        sold_shaders = rotation_collection.find_one({"vendor_hash": 350061650})["shaders"]
+        final = []
+        for shader in sold_shaders:
+            if int(shader) in missing_shader:
+                shader = sold_shaders[shader]
                 item_name = shader["definition"]["displayProperties"]["name"]
                 emoji: discord.Emoji = await create_emoji_from_entry(
                     bot=bot, logger=logger, item_definition=shader["definition"]
                 )
-                missing_shader.append(f"<:{emoji.name}:{emoji.id}> {item_name}")
+                final.append(f"<:{emoji.name}:{emoji.id}> {item_name}")
+        if not final:
+            logger.info("No missing shaders are being sold for %d", discord_id)
+            return "No shaders are being sold that you are missing!"
 
     except Exception as ex:
         logger.exception("Error getting missing mods: %s", ex)
         return {}
     else:
         logger.info("Missing mods sent to %d", discord_id)
-        return missing_shader
+        return final
