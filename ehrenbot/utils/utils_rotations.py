@@ -136,13 +136,13 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
             reset_time = datetime.datetime.now(timezone.utc) + datetime.timedelta(
                 days=1
             )
-            shaders_text = "\n".join(missing_shaders) # TODO: Add shaders to text
+            shaders_text = "\n".join(missing_shaders)
             await member.send(
                 "You are missing shaders from Ada-1! Go pick them up before it's too late!\n\n"
                 f"{shaders_text}\n\n"
                 f"Reset: **{reset_time.strftime('%d-%m-%y')} 18:00:00 UTC**"
             )
-            logger.debug("Sent notification to %s. Missing mods are ", member_id)
+            logger.debug("Sent notification to %s (%s).", member_id, member.name)
 
         # Update notify-mods.csv
         with open("data/notify-shaders.csv", "w", encoding="utf-8") as file:
@@ -568,17 +568,18 @@ async def ada_embed(bot: Ehrenbot) -> discord.Embed:
 
 async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) -> bool:
     try:
-        logger.debug("Getting missing mods for %d...", discord_id)
+        member = bot.get_user(discord_id)
+        logger.debug("Getting missing mods for %d (%s)...", discord_id, member.name)
 
         # Get all collectibles
         profile_collection = bot.database["members"]
         profile = profile_collection.find_one({"discord_id": discord_id})
         if not profile:
-            logger.info("No profile found for %d. Removing from list", discord_id)
+            logger.info("No profile found for %d (%s). Removing from list", discord_id, member.name)
             return "No profile found for this user."
         if not profile["destiny_profile"]:
             logger.info(
-                "No destiny profile found for %d. Removing from list", discord_id)
+                "No destiny profile found for %d (%s). Removing from list", discord_id, member.name)
             return "No profile found for this user."
         response = await bot.destiny_client.destiny2.GetProfile(
             destiny_membership_id=profile["destiny_profile"]["destiny_membership_id"],
@@ -611,7 +612,7 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
             if shader["hash"] in item_hashes:
                 missing_shader.append(shader["hash"])
         if not missing_shader:
-            logger.info("No missing shaders for %d", discord_id)
+            logger.info("No missing shaders for %d (%s)", discord_id, member.name)
             return "You have all shaders!"
 
         # Get available shaders
@@ -627,12 +628,11 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
                 )
                 final.append(f"<:{emoji.name}:{emoji.id}> {item_name}")
         if not final:
-            logger.info("No missing shaders are being sold for %d", discord_id)
+            logger.info("No missing shaders are being sold for %d (%s)", discord_id, member.name)
             return "No shaders are being sold that you are missing!"
 
     except Exception as ex:
         logger.exception("Error getting missing mods: %s", ex)
         return {}
     else:
-        logger.info("Missing mods sent to %d", discord_id)
         return final
