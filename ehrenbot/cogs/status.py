@@ -79,7 +79,7 @@ class Status(commands.Cog):
         if channel.last_message_id is None:
             await channel.send(embed=embed)
         else:
-            message = await channel.fetch_message(channel.last_message_id)
+            message = await channel.history(limit=1).flatten()[0]
             await message.edit(content="", embed=embed)
 
     @api_status.before_loop
