@@ -29,9 +29,9 @@ class Status(commands.Cog):
     # If time is between 16h45 and 17h30 utc, change minutes to 1
     def get_check_time() -> float:
         now = datetime.utcnow()
-        if now.hour == 16 and now.minute >= 45:
+        if now.hour == 17 and now.minute >= 45:
             return 1.0
-        if now.hour == 17 and now.minute <= 30:
+        if now.hour == 18 and now.minute <= 30:
             return 1.0
         else:
             return 10.0
@@ -79,7 +79,7 @@ class Status(commands.Cog):
         if channel.last_message_id is None:
             await channel.send(embed=embed)
         else:
-            message = await channel.history(limit=1).flatten()[0]
+            message = (await channel.history(limit=1).flatten())[0]
             await message.edit(content="", embed=embed)
 
     @api_status.before_loop
