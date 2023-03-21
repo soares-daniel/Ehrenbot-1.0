@@ -404,17 +404,16 @@ async def create_emoji_from_entry(
     try:
         item_hash = item_definition["hash"]
         item_name = item_definition["displayProperties"]["name"]
+        if 20 in item_definition["itemCategoryHashes"]:
+            item_name = item_hash  # Armor share name often, use the hash instead
+        else:
+            chars_to_replace = ":.-'() "
+
+            for char in chars_to_replace:
+                item_name = item_name.replace(char, "_")
+
         item_icon = item_definition["displayProperties"]["icon"]
         # Replace all non-alphanumeric characters with underscores in the middle of the name
-        item_name = (
-            item_name.replace(":", "_")
-            .replace("-", "_")
-            .replace(".", "_")
-            .replace("'", "_")
-            .replace("(", "_")
-            .replace(")", "_")
-            .replace(" ", "_")
-        )
 
         # Check if the emoji already exists
         emojis = await bot.get_guild(bot.vendor_guild_id).fetch_emojis()
@@ -433,17 +432,14 @@ async def create_emoji_from_entry(
                 emoji = await bot.get_guild(bot.vendor_guild_id).create_custom_emoji(
                     name=item_name, image=data
                 )
-    except aiohttp.ClientError as ex:
-        logger.error("%s", ex)
-        return None
     except Exception as ex:
         logger.exception(
             "Error creating emoji with item_definition %s:\n %s", item_definition, ex
         )
-        return None
+        emoji = find(lambda e: e.name == "missing_icon_d2", emojis)
     else:
         logger.debug("Emoji created for %d", item_hash)
-        return emoji
+    return emoji
 
 
 async def vendor_embed(bot: Ehrenbot, vendor_hash: int) -> discord.Embed:
@@ -575,11 +571,18 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
         profile_collection = bot.database["members"]
         profile = profile_collection.find_one({"discord_id": discord_id})
         if not profile:
-            logger.info("No profile found for %d (%s). Removing from list", discord_id, member.name)
+            logger.info(
+                "No profile found for %d (%s). Removing from list",
+                discord_id,
+                member.name,
+            )
             return "No profile found for this user."
         if not profile["destiny_profile"]:
             logger.info(
-                "No destiny profile found for %d (%s). Removing from list", discord_id, member.name)
+                "No destiny profile found for %d (%s). Removing from list",
+                discord_id,
+                member.name,
+            )
             return "No profile found for this user."
         response = await bot.destiny_client.destiny2.GetProfile(
             destiny_membership_id=profile["destiny_profile"]["destiny_membership_id"],
@@ -602,7 +605,9 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
         item_hashes = []
         shaders = bot.database["destiny_shaders"]
         for collectible in not_acquired:
-            response = await bot.destiny_client.decode_hash(collectible, "DestinyCollectibleDefinition")
+            response = await bot.destiny_client.decode_hash(
+                collectible, "DestinyCollectibleDefinition"
+            )
             item_hash = response["itemHash"]
             item_hashes.append(item_hash)
 
@@ -617,7 +622,9 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
 
         # Get available shaders
         rotation_collection = bot.database["destiny_rotation"]
-        sold_shaders = rotation_collection.find_one({"vendor_hash": 350061650})["shaders"]
+        sold_shaders = rotation_collection.find_one({"vendor_hash": 350061650})[
+            "shaders"
+        ]
         final = []
         for shader in sold_shaders:
             if int(shader) in missing_shader:
@@ -628,7 +635,9 @@ async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) ->
                 )
                 final.append(f"<:{emoji.name}:{emoji.id}> {item_name}")
         if not final:
-            logger.info("No missing shaders are being sold for %d (%s)", discord_id, member.name)
+            logger.info(
+                "No missing shaders are being sold for %d (%s)", discord_id, member.name
+            )
             return "No shaders are being sold that you are missing!"
 
     except Exception as ex:
