@@ -183,12 +183,12 @@ class MemberManager(commands.Cog):
             await message.delete()
         member_collection.delete_many({"discord_id": member.id})
         # Remove member from notify-shaders.csv
-        with open("notify-shaders.csv", "r", encoding="utf-8") as file:
+        with open("data/notify-shaders.csv", "r", encoding="utf-8") as file:
             reader = csv.reader(file)
             ids = [int(row[0]) for row in reader]
         if member.id in ids:
             ids.remove(member.id)
-        with open("notify-shaders.csv", "w", encoding="utf-8") as file:
+        with open("data/notify-shaders.csv", "w", encoding="utf-8") as file:
             writer = csv.writer(file)
             for _id in ids:
                 writer.writerow([id])
