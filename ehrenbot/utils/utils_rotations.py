@@ -134,7 +134,7 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
                 continue
             member = await bot.fetch_user(member_id)
             reset_time = datetime.datetime.now(timezone.utc) + datetime.timedelta(
-                days=0
+                days=1
             )
             shaders_text = "\n".join(missing_shaders)
             await member.send(
