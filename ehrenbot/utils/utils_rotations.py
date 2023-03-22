@@ -134,7 +134,7 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
                 continue
             member = await bot.fetch_user(member_id)
             reset_time = datetime.datetime.now(timezone.utc) + datetime.timedelta(
-                days=1
+                days=0
             )
             shaders_text = "\n".join(missing_shaders)
             await member.send(
@@ -526,6 +526,10 @@ async def shader_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
 
 
 async def banshee_embed(bot: Ehrenbot) -> discord.Embed:
+    # Purge old emojis
+    vendor_guild = bot.get_guild(bot.vendor_guild_id)
+    for emoji in vendor_guild.emojis:
+        await vendor_guild.delete_emoji(emoji)
     embed = discord.Embed(
         title="Banshee-44",
         description="Banshee-44 has lived many lives. As master weaponsmith for the Tower, he supplies Guardians with only the best.",
@@ -542,6 +546,10 @@ async def banshee_embed(bot: Ehrenbot) -> discord.Embed:
 
 
 async def ada_embed(bot: Ehrenbot) -> discord.Embed:
+    # Purge old emojis
+    vendor_guild = bot.get_guild(bot.vendor_guild_id)
+    for emoji in vendor_guild.emojis:
+        await vendor_guild.delete_emoji(emoji)
     embed = discord.Embed(
         title="Ada-1",
         description="Advanced Prototype Exo and warden of the Black Armory.",
