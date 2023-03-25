@@ -56,6 +56,12 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
         2: "Arcadian Valley, Nessus",
     }
     vendor_location = vendor_locations[vendor_location_index]
+
+    # Purge old emojis
+    vendor_guild = bot.get_guild(bot.vendor_guild_id)
+    for emoji in vendor_guild.emojis:
+        await vendor_guild.delete_emoji(emoji)
+
     embed = discord.Embed(
         title="Xûr",
         description=f"A peddler of strange curios, Xûr's motives are not his own. He bows to his distant masters, the Nine. \nCurrent location: **{vendor_location}**",
