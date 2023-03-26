@@ -27,7 +27,7 @@ class Ehrenbot(commands.Bot):
 
     def __init__(self) -> None:
         # Bot
-        activity = Activity(type=ActivityType.playing, name="Lightfall")
+        activity = Activity(type=ActivityType.watching, name="Ehrenserver")
         intents = Intents.all()
         super().__init__(activity=activity, command_prefix="!", intents=intents)
         # Logging
