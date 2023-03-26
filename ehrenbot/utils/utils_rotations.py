@@ -10,11 +10,8 @@ import discord
 from discord.utils import find
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.exceptions import (
-    BungieMaintenance,
-    DestinyVendorNotFound,
-    NoBungieResponse,
-)
+from ehrenbot.utils.exceptions import (BungieMaintenance,
+                                       DestinyVendorNotFound, NoBungieResponse)
 
 
 async def check_vendors(bot: Ehrenbot) -> str:

@@ -1,7 +1,7 @@
 # pylint: disable=E0211,E1121,C0206,E1123
 import csv
 import logging
-from datetime import date, datetime, time, timezone, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 import discord
 from discord.ext import commands, tasks
@@ -132,7 +132,7 @@ class Rotations(commands.Cog):
 
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
-        self.banshee.start() # Start Banshee-44 rotation, then Ada-1 rotation, then Xur rotation
+        self.banshee.start()  # Start Banshee-44 rotation, then Ada-1 rotation, then Xur rotation
 
     @daily_vendor_rotation.before_loop
     async def before_daily_vendor_rotation(self):
