@@ -26,17 +26,7 @@ class Status(commands.Cog):
     def cog_unload(self) -> None:
         self.api_status.cancel()
 
-    # If time is between 16h45 and 17h30 utc, change minutes to 1
-    def get_check_time() -> float:
-        now = datetime.utcnow()
-        if now.hour == 17 and now.minute >= 45:
-            return 1.0
-        if now.hour == 18 and now.minute <= 30:
-            return 1.0
-        else:
-            return 10.0
-
-    @tasks.loop(minutes=get_check_time())
+    @tasks.loop(minutes=10)
     async def api_status(self):
         channel: discord.TextChannel = discord.utils.get(
             self.bot.get_all_channels(), name="⚙｜api-status"
