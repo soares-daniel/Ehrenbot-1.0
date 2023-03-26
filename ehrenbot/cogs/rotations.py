@@ -25,7 +25,7 @@ class Rotations(commands.Cog):
 
     def get_reset_time() -> time:
         return time(
-            hour=9, minute=1, second=0, tzinfo=timezone(offset=-timedelta(7))
+            hour=9, minute=1, second=0, tzinfo=timezone(offset=-timedelta(hours=7))
         )  # 1 minute after reset to prevent downtime issues
 
     rotation = discord.SlashCommandGroup(
@@ -144,7 +144,7 @@ class Rotations(commands.Cog):
     async def ada(self):
         await vendor_rotation(self.bot, self.logger, 350061650)
 
-    @ada.after_loop()
+    @ada.after_loop
     async def ada_after(self):
         self.logger.debug("Ada-1 rotation complete. Starting Xur rotation...")
         self.xur.start()
@@ -153,7 +153,7 @@ class Rotations(commands.Cog):
     async def banshee(self):
         await vendor_rotation(self.bot, self.logger, 672118013)
 
-    @banshee.after_loop()
+    @banshee.after_loop
     async def banshee_after(self):
         self.logger.debug("Banshee-44 rotation complete. Starting Ada-1 rotation...")
         self.ada.start()
@@ -203,7 +203,7 @@ class Rotations(commands.Cog):
         else:  # Xur is here
             await xur_rotation(self.bot, self.logger)
 
-    @xur.after_loop()
+    @xur.after_loop
     async def xur_after(self):
         self.logger.debug("Xur rotation complete.")
 
