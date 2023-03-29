@@ -25,7 +25,7 @@ class Rotations(commands.Cog):
 
     def get_reset_time() -> time:
         return time(
-            hour=9, minute=1, second=0, tzinfo=timezone(offset=-timedelta(hours=7))
+            hour=10, minute=1, second=0, tzinfo=timezone(offset=-timedelta(hours=7))
         )  # 1 minute after reset to prevent downtime issues
 
     rotation = discord.SlashCommandGroup(
