@@ -114,7 +114,7 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
         for member_id in notify_shaders:
             try:
                 member = await bot.fetch_user(member_id)
-            except discord.NotFound:
+            except Exception:
                 notify_shaders.remove(member_id)
                 continue
             missing_shaders = await get_missing_shaders(

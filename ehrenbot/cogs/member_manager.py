@@ -191,7 +191,7 @@ class MemberManager(commands.Cog):
         with open("data/notify-shaders.csv", "w", encoding="utf-8") as file:
             writer = csv.writer(file)
             for _id in ids:
-                writer.writerow([id])
+                writer.writerow([_id])
 
 
 def setup(bot) -> None:
