@@ -36,20 +36,20 @@ class Rotations(commands.Cog):
     @rotation.command(name="banshee", description="Start Banshee-44 rotation manually.")
     async def rotation_banshee_ada(self, ctx: discord.ApplicationContext):
         """Start Banshee-44 rotation manually."""
-        self.banshee.start()
         await ctx.respond("Banshee-44 rotation started.", delete_after=2)
+        await vendor_rotation(self.bot, self.logger, 672118013) # Banshee-44
 
     @rotation.command(name="ada", description="Start Ada-1 rotation manually.")
     async def rotation_ada(self, ctx: discord.ApplicationContext):
         """Start Ada-1 rotation manually."""
-        self.ada.start()
         await ctx.respond("Ada-1 rotation started.", delete_after=2)
+        await vendor_rotation(self.bot, self.logger, 350061650) # Ada-1
 
     @rotation.command(name="xur", description="Start Xur rotation manually.")
     async def rotation_xur(self, ctx: discord.ApplicationContext):
         """Start Xur rotation manually."""
-        self.xur.start()
         await ctx.respond("Xur rotation started.", delete_after=2)
+        await self.xur()
 
     @rotation.command(
         name="del_emojis",
@@ -132,7 +132,9 @@ class Rotations(commands.Cog):
 
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
-        self.banshee.start()  # Start Banshee-44 rotation, then Ada-1 rotation, then Xur rotation
+        await vendor_rotation(self.bot, self.logger, 672118013) # Banshee-44
+        await vendor_rotation(self.bot, self.logger, 350061650) # Ada-1
+        await self.xur()
 
     @daily_vendor_rotation.before_loop
     async def before_daily_vendor_rotation(self):
@@ -140,25 +142,6 @@ class Rotations(commands.Cog):
         if not await loop_check(self.bot):
             self.daily_vendor_rotation.cancel()
 
-    @tasks.loop(count=1)
-    async def ada(self):
-        await vendor_rotation(self.bot, self.logger, 350061650)
-
-    @ada.after_loop
-    async def ada_after(self):
-        self.logger.debug("Ada-1 rotation complete. Starting Xur rotation...")
-        self.xur.start()
-
-    @tasks.loop(count=1)
-    async def banshee(self):
-        await vendor_rotation(self.bot, self.logger, 672118013)
-
-    @banshee.after_loop
-    async def banshee_after(self):
-        self.logger.debug("Banshee-44 rotation complete. Starting Ada-1 rotation...")
-        self.ada.start()
-
-    @tasks.loop(count=1)
     async def xur(self):
         self.logger.debug("Starting Xur rotation...")
         weekdays = [1, 2, 3]
@@ -202,10 +185,6 @@ class Rotations(commands.Cog):
                 await message.edit(content="", embed=embed)
         else:  # Xur is here
             await xur_rotation(self.bot, self.logger)
-
-    @xur.after_loop
-    async def xur_after(self):
-        self.logger.debug("Xur rotation complete.")
 
     @tasks.loop(count=1)
     async def delete_emojis(self):
