@@ -94,8 +94,8 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
     if not await fetch_vendor_sales(bot=bot, logger=logger, vendor_hash=vendor_hash):
         logger.error("Failed to fetch vendor sales for vendor %s", vendor_hash)
         return
-    embed = await vendor_embed(bot=bot, vendor_hash=vendor_hash)
     entry = rotation_collection.find_one({"vendor_hash": vendor_hash})
+    embed = await vendor_embed(bot=bot, vendor_hash=vendor_hash)
     if _id := entry.get("message_id"):
         message = await channel.fetch_message(_id)
         await message.edit(content="", embed=embed)
@@ -109,12 +109,16 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
 
     if vendor_hash == 350061650:  # Ada-1 for shaders notification
         logger.debug("Notifying members for missing shaders...")
+        # Get reset date
+        reset_date = entry["vendor"]["nextRefreshDate"]
+        # Parse reset date
+        reset_date = datetime.datetime.strptime(reset_date, "%Y-%m-%dT%H:%M:%SZ")
         with open("data/notify-shaders.csv", "r", encoding="utf-8") as file:
             notify_shaders = file.read().splitlines()
         for member_id in notify_shaders:
-            try:
-                member = await bot.fetch_user(member_id)
-            except Exception:
+            # Check if member is in Main server
+            member = await bot.fetch_user(member_id)
+            if member.mutual_guilds == []:
                 notify_shaders.remove(member_id)
                 continue
             missing_shaders = await get_missing_shaders(
@@ -129,15 +133,12 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
                 continue
             if missing_shaders == []:
                 continue
-            member = await bot.fetch_user(member_id)
-            reset_time = datetime.datetime.now(timezone.utc) + datetime.timedelta(
-                days=1
-            )
             shaders_text = "\n".join(missing_shaders)
+
             await member.send(
                 "You are missing shaders from Ada-1! Go pick them up before it's too late!\n\n"
                 f"{shaders_text}\n\n"
-                f"Reset: **{reset_time.strftime('%d-%m-%y')} 18:00:00 UTC**"
+                f"Reset: **{reset_date.strftime('%d-%m-%y %H:%M')} UTC**\n"
             )
             logger.debug("Sent notification to %s (%s).", member_id, member.name)
 
@@ -145,6 +146,8 @@ async def vendor_rotation(bot: Ehrenbot, logger: Logger, vendor_hash: int):
         with open("data/notify-shaders.csv", "w", encoding="utf-8") as file:
             for member_id in notify_shaders:
                 file.write(f"{member_id}\n")
+
+        logger.info("Vendor rotation complete!")
 
 
 async def fetch_vendor_sales(bot: Ehrenbot, logger: Logger, vendor_hash: int) -> bool:
@@ -445,7 +448,7 @@ async def vendor_embed(bot: Ehrenbot, vendor_hash: int) -> discord.Embed:
             bot.vendor_guild_id = 1057709724843397282
             embed = await banshee_embed(bot)
         case 350061650:
-            bot.vendor_guild_id = 1057710325631295590
+            bot.vendor_guild_id = 1057711135668850688
             embed = await ada_embed(bot)
         case _:
             embed = discord.Embed(title="Vendor", description="Vendor not found")
