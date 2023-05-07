@@ -4,12 +4,8 @@ import logging
 import discord
 
 from ehrenbot.bot import Ehrenbot
-from ehrenbot.utils.utils_rotations import (
-    armor_embed_field,
-    create_emoji_from_entry,
-    fetch_vendor_sales,
-    weapon_embed_field,
-)
+from .item_processing import fetch_vendor_sales
+from .embeds import weapon_embed_field, armor_embed_field, create_emoji_from_entry
 
 
 async def xur_rotation(bot: Ehrenbot, logger: logging.Logger):
