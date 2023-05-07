@@ -1,3 +1,4 @@
+
 import datetime
 import logging
 
@@ -60,7 +61,10 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
 
     embed = discord.Embed(
         title="Xûr",
-        description=f"A peddler of strange curios, Xûr's motives are not his own. He bows to his distant masters, the Nine. \nCurrent location: **{vendor_location}**",
+        description=f"""
+        A peddler of strange curios, Xûr's motives are not his own. He bows to his distant masters, the Nine.
+        \nCurrent location: **{vendor_location}**
+        """,
         color=0xCDAD36,
     )
     vendor_hash = 2190858386
@@ -68,12 +72,12 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
     embed.set_image(
         url="https://www.bungie.net/common/destiny2_content/icons/801c07dc080b79c7da99ac4f59db1f66.jpg"
     )
-    exotics_weapon_string = await exotic_weapon_embed_field(
-        bot=bot, vendor_hash=vendor_hash
+    exotics_weapon_string = await exotic_item_embed_field(
+        bot=bot, vendor_hash=vendor_hash, item_type="weapons"
     )
     embed.add_field(name="Exotic Weapons", value=exotics_weapon_string, inline=True)
-    exotics_armor_string = await exotic_armor_embed_field(
-        bot=bot, vendor_hash=vendor_hash
+    exotics_armor_string = await exotic_item_embed_field(
+        bot=bot, vendor_hash=vendor_hash, item_type="armor"
     )
     embed.add_field(name="Exotic Armor", value=exotics_armor_string, inline=True)
     weapons_string = await weapon_embed_field(bot=bot, vendor_hash=vendor_hash)
@@ -95,41 +99,19 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
     return embed
 
 
-async def exotic_armor_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
-    """Returns a string with all the exotic armor for a specific vendor and category"""
-    daily_rotation = bot.database["destiny_rotation"].find_one(
-        {"vendor_hash": vendor_hash}
-    )
-    armor = daily_rotation["armor"]
-    exotic_armor_string = ""
-    for item in armor:
-        if armor[item]["definition"]["inventory"]["tierType"] != 6:
-            continue
-        item_name = armor[item]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(
-            bot=bot,
-            logger=bot.logger,
-            item_definition=armor[item]["definition"],
-        )
-        exotic_armor_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
-    return exotic_armor_string
+async def exotic_item_embed_field(bot: Ehrenbot, vendor_hash: int, item_type: str) -> str:
+    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
+    items = daily_rotation[item_type]
 
+    exotic_items = [
+        (items[item]["definition"]["displayProperties"]["name"], items[item]["definition"])
+        for item in items
+        if items[item]["definition"]["inventory"]["tierType"] == 6
+    ]
 
-async def exotic_weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
-    """Returns a string with all the exotic weapons for a specific vendor and category"""
-    daily_rotation = bot.database["destiny_rotation"].find_one(
-        {"vendor_hash": vendor_hash}
-    )
-    weapons = daily_rotation["weapons"]
-    exotic_weapon_string = ""
-    for item in weapons:
-        if weapons[item]["definition"]["inventory"]["tierType"] != 6:
-            continue
-        item_name = weapons[item]["definition"]["displayProperties"]["name"]
-        emoji = await create_emoji_from_entry(
-            bot=bot,
-            logger=bot.logger,
-            item_definition=weapons[item]["definition"],
-        )
-        exotic_weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
-    return exotic_weapon_string
+    exotic_weapon_strings = []
+    for item_name, item_definition in exotic_items:
+        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_definition=item_definition)
+        exotic_weapon_strings.append(f"{emoji} {item_name}")
+
+    return "\n".join(exotic_weapon_strings)
