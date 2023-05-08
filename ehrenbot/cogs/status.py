@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_status import (
+from ehrenbot.utils.status import (
     check_api_status,
     check_group_v2_status,
     check_user_status,
