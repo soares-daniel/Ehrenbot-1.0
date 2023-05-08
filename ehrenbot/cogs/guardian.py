@@ -1,11 +1,9 @@
 import logging
-from datetime import time, timezone
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.registration import update_profile
 
 
 class Guardian(commands.Cog):
@@ -32,16 +30,6 @@ class Guardian(commands.Cog):
     @guardian.command(name="inventory", description="View your Destiny 2 inventory.")
     async def guardian_inventory(self, ctx: discord.ApplicationContext):
         """View your Destiny 2 inventory."""
-
-    @tasks.loop(time=time(hour=3, tzinfo=timezone.utc))
-    async def update_profiles(self):
-        token_collection = self.bot.database["tokens"]
-        for entry in token_collection.find():
-            await update_profile(self.bot, entry["discord_id"])
-
-    @update_profiles.before_loop
-    async def before_update_profiles(self):
-        await self.bot.wait_until_ready()
 
 
 def setup(bot) -> None:

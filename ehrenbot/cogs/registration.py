@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import logging
+from datetime import time, timezone
 
 import discord
 from discord.ext import commands, tasks
@@ -22,9 +23,11 @@ class Registration(commands.Cog):
         self.logger.addHandler(self.bot.file_handler)
         self.logger.addHandler(self.bot.stream_handler)
         self.update_tokens.start()
+        self.update_profiles.start()
 
     def cog_unload(self) -> None:
         self.update_tokens.cancel()
+        self.update_profiles.cancel()
 
     @commands.slash_command(
         name="register",
@@ -137,6 +140,16 @@ class Registration(commands.Cog):
 
     @update_tokens.before_loop
     async def before_update_tokens(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(time=time(hour=3, tzinfo=timezone.utc))
+    async def update_profiles(self):
+        token_collection = self.bot.database["tokens"]
+        for entry in token_collection.find():
+            await update_profile(self.bot, entry["discord_id"])
+
+    @update_profiles.before_loop
+    async def before_update_profiles(self):
         await self.bot.wait_until_ready()
 
 
