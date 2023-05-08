@@ -5,6 +5,8 @@ import discord
 
 from ehrenbot import Ehrenbot
 
+from .exceptions import TicketNotFound
+
 
 def create_ticket_embed(
     ticket: dict, author: Union[discord.Member, discord.User]
@@ -47,7 +49,7 @@ def get_ticket_entry(bot: Ehrenbot, logger: Logger, ticket_id: int) -> dict:
         ticket_collection = bot.database["destiny_tickets"]
         ticket_entry: dict = ticket_collection.find_one({"ticket_id": ticket_id})
         if ticket_entry is None:
-            raise Exception(f"Ticket {ticket_id} not found")
+            raise TicketNotFound
         return ticket_entry
     except Exception as ex:
         logger.error("%s", ex)

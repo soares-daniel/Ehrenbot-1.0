@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_ticket import (
+from ehrenbot.utils.ticket import (
     create_ticket_embed,
     set_ticket_status,
     sync_ticket,

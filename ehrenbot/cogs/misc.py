@@ -5,7 +5,7 @@ import discord
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
-from ehrenbot.utils.utils_misc import CharacterView
+from ehrenbot.utils.views import CharacterView
 
 
 class Misc(commands.Cog):
