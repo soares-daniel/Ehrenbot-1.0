@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
 from ehrenbot.utils.exceptions import BungieAPIError
-from ehrenbot.utils.utils_registration import (
+from ehrenbot.utils.registration import (
     check_profile_endpoints,
     setup_profile,
     update_profile,

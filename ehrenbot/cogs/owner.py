@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from ehrenbot.bot import Ehrenbot
-from ehrenbot.utils.utils_registration import setup_profile, update_profile
+from ehrenbot.utils.registration import setup_profile, update_profile
 
 
 class Owner(commands.Cog):

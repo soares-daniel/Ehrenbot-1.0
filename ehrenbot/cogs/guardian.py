@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands, tasks
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.utils_registration import update_profile
+from ehrenbot.utils.registration import update_profile
 
 
 class Guardian(commands.Cog):
