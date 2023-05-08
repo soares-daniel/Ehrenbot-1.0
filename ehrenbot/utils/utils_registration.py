@@ -1,7 +1,13 @@
 import json
 
 from ehrenbot import Ehrenbot
-from ehrenbot.utils.exceptions import BungieAPIError
+from ehrenbot.utils.exceptions import (
+    BungieAPIError,
+    GroupNotFound,
+    MembershipDataNotFound,
+    NoAPIResponse,
+    ProfileNotFound,
+)
 
 
 async def check_profile_endpoints(bot: Ehrenbot):
@@ -78,11 +84,9 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
         user_endpoints = bot.destiny_client.user
         response = await user_endpoints.GetMembershipDataForCurrentUser(token=token)
         if response is None:
-            raise Exception("Could not get membership data for current user.")
+            raise NoAPIResponse
         if response["ErrorCode"] != 1:
-            raise Exception(
-                f"Could not get membership data for current user: {response['ErrorStatus']}"
-            )
+            raise MembershipDataNotFound(error_status=response["ErrorStatus"])
         data = response["Response"]
         profile["destiny_membership_id"] = data["destinyMemberships"][0]["membershipId"]
         profile["membership_type"] = data["destinyMemberships"][0]["membershipType"]
@@ -116,9 +120,9 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
             components=[100],
         )
         if response is None:
-            raise Exception("Could not get profile.")
+            raise NoAPIResponse
         if response["ErrorCode"] != 1:
-            raise Exception(f"Could not get profile: {response['ErrorStatus']}")
+            raise ProfileNotFound(error_status=response["ErrorStatus"])
         data = response["Response"]["profile"]["data"]
         profile["cross_save_override"] = data["userInfo"].get("crossSaveOverride", 0)
         profile["applicable_membership_types"] = data["userInfo"].get(
@@ -134,11 +138,9 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
             destiny_membership_id=profile["destiny_membership_id"],
         )
         if response is None:
-            raise Exception("Could not get groups for member.")
+            raise NoAPIResponse
         if response["ErrorCode"] != 1:
-            raise Exception(
-                f"Could not get groups for member: {response['ErrorStatus']}"
-            )
+            raise GroupNotFound(error_status=response["ErrorStatus"])
         data = response["Response"].get("results")
         if data:
             profile["group_id"] = data[0]["member"]["groupId"]
