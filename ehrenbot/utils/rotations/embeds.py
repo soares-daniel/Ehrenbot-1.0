@@ -9,9 +9,19 @@ from discord.utils import find
 
 from ehrenbot import Ehrenbot
 
+socket_category_channels = {
+    "Intrinsic": 1105461848167415828,
+    "Barrel": 1105462443481759775,
+    "Magazine": 1105461848167415828,
+    "Trait": 1105462522540212307,
+    "Origin Trait": 1105476072759382079,
+}
+
 
 async def create_emoji_from_entry(
-    bot: Ehrenbot, logger: Logger, item_definition: dict
+    bot: Ehrenbot,
+    logger: Logger,
+    item_definition: dict,
 ) -> Union[discord.Emoji, None]:
     try:
         item_hash = item_definition["hash"]
@@ -48,9 +58,58 @@ async def create_emoji_from_entry(
         logger.exception(
             "Error creating emoji with item_definition %s:\n %s", item_definition, ex
         )
-        emoji = find(lambda e: e.name == "missing_icon_d2", emojis)
     else:
         logger.debug("Emoji created for %d", item_hash)
+    return emoji
+
+
+async def create_socket_emoji(
+    bot: Ehrenbot,
+    logger: Logger,
+    socket_hash: int,
+    socket_name: str,
+    socket_icon: str,
+    socket_category: str,
+) -> Union[discord.Emoji, None]:
+    # Replace all non-alphanumeric
+    chars_to_replace = ":.-'() "
+    for char in chars_to_replace:
+        socket_name = socket_name.replace(char, "_")
+
+    try:
+        # Check if the emoji already exists
+        emoji_guild = socket_category_channels.get(socket_category)
+        emojis = await bot.get_guild(emoji_guild).fetch_emojis()
+        emoji = find(lambda e: e.name == socket_name, emojis)
+        if emoji:
+            logger.debug("Emoji already exists for %d", socket_hash)
+            return emoji
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://www.bungie.net{socket_icon}") as resp:
+                if resp.status != 200:
+                    raise aiohttp.ClientError(
+                        f"Error fetching image: {resp.status} {resp.reason}"
+                    )
+                data = await resp.read()
+                emoji = await bot.get_guild(emoji_guild).create_custom_emoji(
+                    name=socket_name, image=data
+                )
+    except Exception as ex:
+        logger.exception(
+            """
+            Error creating emoji for socket:
+            Category: %s
+            Socket Hash: %s
+            Socket Name: %s
+            Reason: %s
+            """,
+            socket_category,
+            socket_hash,
+            socket_name,
+            ex,
+        )
+    else:
+        logger.debug("Emoji created for %d", socket_hash)
     return emoji
 
 
@@ -90,6 +149,32 @@ async def weapon_embed_field(bot: Ehrenbot, vendor_hash: int) -> str:
         )
         weapon_string += f"<:{emoji.name}:{emoji.id}> {item_name}\n"
     return weapon_string
+
+
+# TODO Not implementable, field to long. Need to redesign embed, maybe with pagination-> v2 feature
+# * WORKS!!!
+async def weapon_sockets_field(bot: Ehrenbot, weapon: dict):
+    sockets_string = []
+    to_check = ["Intrinsic", "Barrel", "Magazine", "Trait", "Origin Trait"]
+    sockets = weapon["sockets"]
+    for category in sockets:
+        if category in to_check:
+            for socket in sockets[category]:
+                socket = sockets[category][socket]
+                definition = await bot.destiny_client.decode_hash(
+                    hash_id=socket["socket_hash"],
+                    definition="DestinyInventoryItemDefinition",
+                )
+                emoji: discord.Emoji = await create_socket_emoji(
+                    bot=bot,
+                    logger=bot.logger,
+                    socket_hash=socket["socket_hash"],
+                    socket_name=socket["socket_name"],
+                    socket_icon=definition["displayProperties"]["icon"],
+                    socket_category=category,
+                )
+                sockets_string.append(emoji)
+    return sockets_string
 
 
 async def armor_embed_field(bot: Ehrenbot, vendor_hash: int, category: str) -> str:
