@@ -13,10 +13,6 @@ class Guardian(commands.Cog):
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(self.bot.file_handler)
         self.logger.addHandler(self.bot.stream_handler)
-        self.update_profiles.start()
-
-    def cog_unload(self) -> None:
-        self.update_profiles.cancel()
 
     guardian = discord.SlashCommandGroup(
         name="guardian",
