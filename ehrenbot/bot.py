@@ -21,6 +21,7 @@ from settings import (
     MONGODB_PASS,
     MONGODB_USER,
     REDIRECT_URI,
+    WEB_SERVER_PORT,
 )
 
 class Ehrenbot(commands.Bot):
@@ -155,6 +156,6 @@ class Ehrenbot(commands.Bot):
         app.router.add_get('/', self.handle_request)
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', 25582)
+        site = web.TCPSite(runner, '0.0.0.0', WEB_SERVER_PORT)
         await site.start()
-        print("Web server started on port 25582.")
+        print(f"Web server started on port {WEB_SERVER_PORT}.")

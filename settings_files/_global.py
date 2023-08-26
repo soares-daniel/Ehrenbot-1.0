@@ -31,3 +31,4 @@ TWITTER_BEARER_TOKEN = os.getenv('TWITTER_BEARER_TOKEN')
 
 # Server configuration
 SERVER_PORT = os.getenv('SERVER_PORT')
+WEB_SERVER_PORT = os.getenv('WEB_SERVER_PORT')
