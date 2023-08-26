@@ -30,11 +30,11 @@ class Registration(commands.Cog):
         self.update_tokens.cancel()
         self.update_profiles.cancel()
 
-    @commands.guild_only()
     @commands.slash_command(
         name="register",
         description="Link your Bungie account with your Discord account.",
     )
+    @commands.guild_only()
     async def send_registration(self, ctx: discord.ApplicationContext):
         """Link your Bungie account with your Discord account"""
         token_collection = self.bot.database["destiny_tokens"]
