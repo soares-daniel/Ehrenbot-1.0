@@ -14,9 +14,13 @@ async def check_profile_endpoints(bot: Ehrenbot):
     admin_token = bot.database["destiny_tokens"].find_one(
         {"discord_id": bot.ADMIN_DISCORD_ID}
     )["token"]
+    if admin_token is None:
+        return
     admin_profile = bot.database["members"].find_one(
         {"discord_id": bot.ADMIN_DISCORD_ID}
     )["destiny_profile"]
+    if admin_profile is None:
+        return
     # Check user endpoint
     response = await bot.destiny_client.user.GetMembershipDataForCurrentUser(
         token=admin_token
