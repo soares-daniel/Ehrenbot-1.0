@@ -131,6 +131,9 @@ class Ehrenbot(commands.Bot):
         }
         self.database["destiny_tokens"].insert_one(entry)
 
+        # Remove state form mapped_states
+        del self.mapped_states[state]
+
         # Serve HTML with JavaScript to close the tab
         html_content = """
             <!DOCTYPE html>
