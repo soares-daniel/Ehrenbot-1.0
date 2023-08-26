@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import logging
+from urllib.parse import parse_qs, urlparse
 from datetime import time, timezone
 
 import discord
@@ -52,7 +53,11 @@ class Registration(commands.Cog):
         )
         oauth = self.bot.destiny_client.oauth
         url = await oauth.gen_auth_link()
-        await ctx.author.send(url + f"&discord={ctx.author.id}")
+        parts = urlparse(url)
+        query_dict = parse_qs(parts.query)
+        state = query_dict["state"][0]
+        self.bot.mapped_states[state] = ctx.author.id
+        await ctx.author.send(url)
 
         # Check during 300 seconds if the token has been stored in the database
         token = token_collection.find_one({"discord_id": ctx.author.id})

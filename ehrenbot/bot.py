@@ -80,6 +80,7 @@ class Ehrenbot(commands.Bot):
             hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
         )
         self.vendor_guild_id = 0
+        self.mapped_states = {}  # state -> discord_id
 
     async def on_ready(self) -> None:
         print("------")
@@ -107,7 +108,7 @@ class Ehrenbot(commands.Bot):
         try:
             code = request.query["code"]
             state = request.query["state"]
-            discord_id = request.query["discord"]
+            discord_id = self.mapped_states[state]
         except KeyError:
             return web.Response(text="Missing required query parameters.")
 
