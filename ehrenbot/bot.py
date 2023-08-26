@@ -3,6 +3,8 @@ import logging
 from datetime import time, timezone
 from logging import handlers
 
+from aiohttp import web
+
 from destipy.destiny_client import DestinyClient
 from discord import Activity, ActivityType, DiscordException, Intents
 from discord.ext import commands
@@ -20,7 +22,6 @@ from settings import (
     MONGODB_USER,
     REDIRECT_URI,
 )
-
 
 class Ehrenbot(commands.Bot):
     """The Ehrenbot Discord bot."""
@@ -84,6 +85,8 @@ class Ehrenbot(commands.Bot):
         print(self.user.name)
         print("From Ehrenmann to Ehrenmänner")
         print("------")
+        print("Starting web server...")
+        self.loop.create_task(self.web_server())
 
     async def on_application_command_error(
         self, ctx: commands.Context, error: DiscordException
@@ -96,3 +99,62 @@ class Ehrenbot(commands.Bot):
             )
         else:
             raise error  # Here we raise other errors to ensure they aren't ignored
+
+    async def handle_request(self, request: web.Request) -> web.Response:
+        """Handle a request to the web server."""
+
+        try:
+            code = request.query["code"]
+            state = request.query["state"]
+            discord_id = request.query["discord"]
+        except KeyError:
+            return web.Response(text="Missing required query parameters.")
+
+        # Fetch the token and save to the database
+        try:
+            token = await self.destiny_client.oauth.fetch_token(code, state)
+        except Exception as e:
+            print(f"Failed to fetch token: {e}")
+            return web.Response(text="Failed to fetch token.")
+
+        #  TODO: FIX fetch_token to raise exception if no token
+
+        if token is None:
+            return web.Response(text="Failed to fetch token.")
+
+        entry = {
+            "discord_id": discord_id,
+            "membership_id": token["membership_id"],
+            "token": token,
+        }
+        self.database["destiny_tokens"].insert_one(entry)
+
+        # Serve HTML with JavaScript to close the tab
+        html_content = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script type="text/javascript">
+                    function closeWindow() {
+                        window.close();
+                    }
+                    setTimeout(closeWindow, 1000);
+                </script>
+            </head>
+            <body>
+                <p>Token registered, you can go back to Discord.</p>
+            </body>
+            </html>
+        """
+
+        return web.Response(content_type="text/html", text=html_content)
+
+    async def web_server(self) -> None:
+        """Start the web server."""
+        app = web.Application()
+        app.router.add_get('/', self.handle_request)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, '0.0.0.0', 25582)
+        await site.start()
+        print("Web server started on port 25582.")

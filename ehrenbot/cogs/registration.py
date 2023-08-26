@@ -29,19 +29,14 @@ class Registration(commands.Cog):
         self.update_tokens.cancel()
         self.update_profiles.cancel()
 
+    @commands.guild_only()
     @commands.slash_command(
         name="register",
         description="Link your Bungie account with your Discord account.",
     )
-    @commands.guild_only()
-    async def register(self, ctx: discord.ApplicationContext):
+    async def send_registration(self, ctx: discord.ApplicationContext):
         """Link your Bungie account with your Discord account"""
         token_collection = self.bot.database["destiny_tokens"]
-        if token_collection.find_one({"discord_id": ctx.author.id}):
-            await ctx.respond(
-                "You are already registered.", ephemeral=True, delete_after=10
-            )
-            return
         try:
             await check_profile_endpoints(self.bot)
         except BungieAPIError:
@@ -57,68 +52,60 @@ class Registration(commands.Cog):
         )
         oauth = self.bot.destiny_client.oauth
         url = await oauth.gen_auth_link()
-        await ctx.author.send(url)
+        await ctx.author.send(url + f"&discord={ctx.author.id}")
 
-        try:
-            # Wait for the user to respond with the url
-            msg: discord.Message = await self.bot.wait_for(
-                "message",
-                check=lambda m: m.author == ctx.author
-                and m.channel == ctx.author.dm_channel
-                and m.content.startswith("https://bungie.sedam.me"),
-                timeout=300,
-            )
-        except asyncio.TimeoutError:
-            await ctx.author.send("You took too long to respond. Please try again.")
-            return
-        else:
-            # Store the token in the database, setup profile
-            token = await oauth.fetch_token(msg.content)
-            entry = {
-                "discord_id": ctx.author.id,
-                "membership_id": token["membership_id"],
-                "token": token,
-            }
-            token_collection.insert_one(entry)
-
-            if await setup_profile(self.bot, ctx.author.id, token["membership_id"]):
-                if await update_profile(self.bot, ctx.author.id):
-                    await ctx.author.send(
-                        "Your Bungie account has been successfully linked to your Discord account!",
-                        delete_after=10,
-                    )
-                    # Give the user the "registered" role
-                    role = discord.utils.get(ctx.guild.roles, name="Registered")
-                    if not role:
-                        await ctx.guild.create_role(name="Registered")
-                    await ctx.author.add_roles(role)
-                    # Update memberhall
-                    members_collection = self.bot.database["members"]
-                    member = members_collection.find_one({"discord_id": ctx.author.id})
-                    channel = ctx.guild.get_channel(member["channel_id"])
-                    message = await channel.fetch_message(member["message_id"])
-                    embed = message.embeds[0]
-                    embed.add_field(
-                        name="Bungie.Net",
-                        value=member["destiny_profile"]["unique_name"],
-                        inline=False,
-                    )
-                    embed.color = discord.Color.green()
-                    await message.edit(content="", embed=embed)
-                    # Insert member to shader notifications
-                    with open("data/notify-shaders.csv", "a", encoding="utf-8") as file:
-                        writer = csv.writer(file)
-                        writer.writerow([ctx.author.id])
+        # Check during 300 seconds if the token has been stored in the database
+        token = token_collection.find_one({"discord_id": ctx.author.id})
+        if token is None:
+            for _ in range(300):
+                if token is None:
+                    await asyncio.sleep(1)
+                    token = token_collection.find_one({"discord_id": ctx.author.id})
                 else:
-                    await ctx.author.send(
-                        "Something went wrong while updating your profile. Please contact the admin.",
-                        delete_after=10,
-                    )
-            else:
+                    break
+
+        if token is None:
+            await ctx.author.send("The token could not be found in the database. Please try again.")
+            return
+
+        if await setup_profile(self.bot, ctx.author.id, token["membership_id"]):
+            if await update_profile(self.bot, ctx.author.id):
                 await ctx.author.send(
-                    "Something went wrong while setting up your profile. Please contact the admin.",
+                    "Your Bungie account has been successfully linked to your Discord account!",
                     delete_after=10,
                 )
+                # Give the user the "registered" role
+                role = discord.utils.get(ctx.guild.roles, name="Registered")
+                if not role:
+                    await ctx.guild.create_role(name="Registered")
+                await ctx.author.add_roles(role)
+                # Update memberhall
+                members_collection = self.bot.database["members"]
+                member = members_collection.find_one({"discord_id": ctx.author.id})
+                channel = ctx.guild.get_channel(member["channel_id"])
+                message = await channel.fetch_message(member["message_id"])
+                embed = message.embeds[0]
+                embed.add_field(
+                    name="Bungie.Net",
+                    value=member["destiny_profile"]["unique_name"],
+                    inline=False,
+                )
+                embed.color = discord.Color.green()
+                await message.edit(content="", embed=embed)
+                # Insert member to shader notifications
+                with open("data/notify-shaders.csv", "a", encoding="utf-8") as file:
+                    writer = csv.writer(file)
+                    writer.writerow([ctx.author.id])
+            else:
+                await ctx.author.send(
+                    "Something went wrong while updating your profile. Please contact the admin.",
+                    delete_after=10,
+                )
+        else:
+            await ctx.author.send(
+                "Something went wrong while setting up your profile. Please contact the admin.",
+                delete_after=10,
+            )
 
     @tasks.loop(hours=1)
     async def update_tokens(self):
