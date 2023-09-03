@@ -11,12 +11,14 @@ def export_data_from_cloud(uri, output_directory):
     except Exception as ex:
         print(f"An error occurred during export: {ex}")
 
-def import_data_to_local(db_name, path_to_exported_data):
-    try:
-        subprocess.run(["mongorestore", "--db", db_name, path_to_exported_data])
-        print("Data imported successfully")
-    except Exception as ex:
-        print(f"An error occurred during import: {ex}")
+def import_data_to_local(databases, path_to_exported_data):
+    for db in databases:
+        try:
+            db_path = os.path.join(path_to_exported_data, db)
+            subprocess.run(["mongorestore", "--db", db, db_path])
+            print(f"Data for database {db} imported successfully")
+        except Exception as ex:
+            print(f"An error occurred during import of {db}: {ex}")
 
 if __name__ == "__main__":
     # URI of your MongoDB cloud instance
@@ -25,7 +27,7 @@ if __name__ == "__main__":
     OUTPUT_DIR = "mongodb_exported_data"
 
     # Name of your local database
-    LOCAL_DB_NAME = "my_local_database"
+    databases_to_import = ["d2manifst_en", "ehrenbot", "test"]
 
     # Create directory for exported data if it doesn't exist
     if not os.path.exists(OUTPUT_DIR):
@@ -37,7 +39,6 @@ if __name__ == "__main__":
     # Note: At this point, manually transfer the data to your local machine if needed
 
     # Step 2: Import data into the local MongoDB instance
-    import_data_to_local(LOCAL_DB_NAME, OUTPUT_DIR)
-
+    import_data_to_local(databases_to_import, OUTPUT_DIR)
     # Optional: Remove the exported data directory
     shutil.rmtree(OUTPUT_DIR)
