@@ -45,7 +45,7 @@ class MemberManager(commands.Cog):
                 return invite.code
 
     @commands.slash_command(
-        name="setup_members", description="Get the invite link for the server."
+        name="setup_members", description="Setup the member hall."
     )
     async def setup_members(self, ctx: discord.ApplicationContext):
         await ctx.defer()
