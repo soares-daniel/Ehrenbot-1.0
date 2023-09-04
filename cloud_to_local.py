@@ -15,7 +15,8 @@ def import_data_to_local(databases, path_to_exported_data):
     for db in databases:
         try:
             db_path = os.path.join(path_to_exported_data, db)
-            subprocess.run(["mongorestore", "--db", db, db_path])
+            auth_str = f"--username={MONGODB_USER} --password={MONGODB_PASS} --authenticationDatabase=admin"
+            subprocess.run(["mongorestore", auth_str, "--nsInclude", f"{db}.*", db_path])
             print(f"Data for database {db} imported successfully")
         except Exception as ex:
             print(f"An error occurred during import of {db}: {ex}")
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     OUTPUT_DIR = "mongodb_exported_data"
 
     # Name of your local database
-    databases_to_import = ["d2manifst_en", "ehrenbot", "test"]
+    databases_to_import = ["d2manifest_en", "ehrenbot", "test"]
 
     # Create directory for exported data if it doesn't exist
     if not os.path.exists(OUTPUT_DIR):
@@ -40,5 +41,6 @@ if __name__ == "__main__":
 
     # Step 2: Import data into the local MongoDB instance
     import_data_to_local(databases_to_import, OUTPUT_DIR)
+
     # Optional: Remove the exported data directory
     shutil.rmtree(OUTPUT_DIR)
