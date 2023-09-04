@@ -16,6 +16,7 @@ from settings import (
     BUNGIE_CLIENT_ID,
     BUNGIE_CLIENT_SECRET,
     DEBUG,
+    MONGODB_PREFIX,
     MONGODB_HOST,
     MONGODB_OPTIONS,
     MONGODB_PASS,
@@ -52,7 +53,7 @@ class Ehrenbot(commands.Bot):
         self.stream_handler = stream_handler
         self.logger = logger
         # MongoDB
-        conn = f"mongodb+srv://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
+        conn = f"{MONGODB_PREFIX}://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
         self.mongo_client = MongoClient(conn)
         self.database = (
             self.mongo_client["ehrenbot"] if not DEBUG else self.mongo_client["test"]
