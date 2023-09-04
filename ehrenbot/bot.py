@@ -54,6 +54,7 @@ class Ehrenbot(commands.Bot):
         self.logger = logger
         # MongoDB
         conn = f"{MONGODB_PREFIX}://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
+        print(conn)
         self.mongo_client = MongoClient(conn)
         self.database = (
             self.mongo_client["ehrenbot"] if not DEBUG else self.mongo_client["test"]
