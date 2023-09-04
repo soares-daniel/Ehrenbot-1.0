@@ -10,7 +10,7 @@ import zipfile
 
 from pymongo.mongo_client import MongoClient
 
-from settings import MONGODB_HOST, MONGODB_OPTIONS, MONGODB_PASS, MONGODB_USER
+from settings import MONGODB_PREFIX, MONGODB_HOST, MONGODB_OPTIONS, MONGODB_PASS, MONGODB_USER
 
 # %% Settings
 #################
@@ -63,8 +63,8 @@ else:
 
     # %% Step 4: Import!
     # mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
-    MONGODB_URL = "mongodb+srv://{}:{}@{}/?{}".format(
-        MONGODB_USER, MONGODB_PASS, MONGODB_HOST, MONGODB_OPTIONS
+    MONGODB_URL = "{}://{}:{}@{}/?{}".format(
+        MONGODB_PREFIX, MONGODB_USER, MONGODB_PASS, MONGODB_HOST, MONGODB_OPTIONS
     )
 
     client = MongoClient(MONGODB_URL)
