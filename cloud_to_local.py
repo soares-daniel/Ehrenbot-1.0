@@ -15,8 +15,12 @@ def import_data_to_local(databases, path_to_exported_data):
     for db in databases:
         try:
             db_path = os.path.join(path_to_exported_data, db)
-            auth_str = "--username=sedam --password=SoaDa.660.mongodb --authenticationDatabase=admin"
-            subprocess.run(["mongorestore", auth_str, "--nsInclude", f"{db}.*", db_path])
+            auth_args = [
+                "--username", "sedam",
+                "--password", "SoaDa.660.mongodb",
+                "--authenticationDatabase", "admin"
+            ]
+            subprocess.run(["mongorestore", *auth_args, "--nsInclude", f"{db}.*", db_path])
             print(f"Data for database {db} imported successfully")
         except Exception as ex:
             print(f"An error occurred during import of {db}: {ex}")
