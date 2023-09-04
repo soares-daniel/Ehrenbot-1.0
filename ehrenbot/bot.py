@@ -4,6 +4,7 @@ from datetime import time, timezone
 from logging import handlers
 
 from aiohttp import web
+from aiohttp.http_exceptions import BadStatusLine
 
 from destipy.destiny_client import DestinyClient
 from discord import Activity, ActivityType, DiscordException, Intents
@@ -54,7 +55,6 @@ class Ehrenbot(commands.Bot):
         self.logger = logger
         # MongoDB
         conn = f"{MONGODB_PREFIX}://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
-        print(conn)
         self.mongo_client = MongoClient(conn)
         self.database = (
             self.mongo_client["ehrenbot"] if not DEBUG else self.mongo_client["test"]
@@ -113,6 +113,8 @@ class Ehrenbot(commands.Bot):
             discord_id = self.mapped_states[state]
         except KeyError:
             return web.Response(text="Missing required query parameters.")
+        except BadStatusLine:
+            return web.Response(text="Bad status line.")
 
         # Fetch the token and save to the database
         try:
