@@ -75,6 +75,7 @@ async def create_socket_emoji(
     chars_to_replace = ":.-'() "
     for char in chars_to_replace:
         socket_name = socket_name.replace(char, "_")
+        socket_name = socket_name.replace("+", "_")
 
     try:
         # Check if the emoji already exists

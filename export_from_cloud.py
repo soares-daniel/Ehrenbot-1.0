@@ -11,7 +11,7 @@ def export_data_from_cloud(uri, output_directory):
 
 if __name__ == "__main__":
     # URI of your MongoDB cloud instance
-    CLOUD_URI = f"mongodb+srv://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
+    CLOUD_URI = f"mongodb://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
     # Output directory for exported data
     OUTPUT_DIR = "mongodb_exported_data"
 
