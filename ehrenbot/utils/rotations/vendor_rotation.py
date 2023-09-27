@@ -45,7 +45,7 @@ async def vendor_rotations(bot: Ehrenbot, logger: Logger, vendor_hash: int):
         for member_id in notify_shaders:
             # Check if member is in Main server
             member = await bot.fetch_user(member_id)
-            if member.mutual_guilds == []:
+            if member.mutual_guilds == [] or member is None:
                 notify_shaders.remove(member_id)
                 continue
             missing_shaders = await get_missing_shaders(
