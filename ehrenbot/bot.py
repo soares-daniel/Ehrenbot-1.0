@@ -104,11 +104,11 @@ class Ehrenbot(commands.Bot):
     async def handle_request(self, request: web.Request) -> web.Response:
         """Handle a request to the web server."""
 
-        print("handle_request called.")
         try:
             code = request.query["code"]
             state = request.query["state"]
             db_state = self.database["states"].find_one({"state": state})
+            print(f"Code: {code}, State: {state}, DB State: {db_state}")
             if not db_state:
                 return web.Response(text="Invalid state.")
             discord_id = db_state["discord_id"]
