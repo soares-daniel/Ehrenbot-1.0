@@ -56,7 +56,10 @@ class Registration(commands.Cog):
         parts = urlparse(url)
         query_dict = parse_qs(parts.query)
         state = query_dict["state"][0]
-        self.bot.database["states"].update_one({"state": state, "discord_id": ctx.author.id}, upsert=True)
+        # store the state in the database via update_one
+        self.bot.database["states"].update_one(
+            {"discord_id": ctx.author.id}, {"$set": {"state": state}}, upsert=True
+        )
         await ctx.author.send(url)
 
         # Check during 300 seconds if the token has been stored in the database
