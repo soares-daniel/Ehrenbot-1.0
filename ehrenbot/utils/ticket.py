@@ -71,7 +71,9 @@ async def sync_ticket(
         )
         return
     guild = bot.get_guild(782316238247559189)
-    admin_channel: discord.TextChannel = discord.utils.get(guild.channels, name="📮｜admin-tickets")  # type: ignore
+    admin_channel: discord.TextChannel = discord.utils.get(
+        guild.channels, name="📮｜admin-tickets"
+    )  # type: ignore
     admin_message = await admin_channel.fetch_message(ticket_entry["admin_message_id"])
     user = bot.get_user(ticket_entry["discord_id"])
     user_message = await user.fetch_message(ticket_entry["user_message_id"])

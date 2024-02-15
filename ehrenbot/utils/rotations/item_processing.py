@@ -189,7 +189,9 @@ async def process_vendor_sales(
             {"vendor_hash": vendor_hash},
             {
                 "$set": {
-                    "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+                    "date": datetime.datetime.now(datetime.timezone.utc).strftime(
+                        "%Y-%m-%d"
+                    )
                 }
             },
             upsert=True,

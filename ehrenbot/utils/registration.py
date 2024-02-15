@@ -14,9 +14,7 @@ async def check_profile_endpoints(bot: Ehrenbot):
     collection = bot.database["destiny_tokens"]
     if collection.count_documents({}) == 0:
         return
-    admin_token = collection.find_one(
-        {"discord_id": bot.ADMIN_DISCORD_ID}
-    )["token"]
+    admin_token = collection.find_one({"discord_id": bot.ADMIN_DISCORD_ID})["token"]
     if admin_token is None:
         return
     admin_profile = bot.database["members"].find_one(
@@ -162,6 +160,7 @@ async def update_profile(bot: Ehrenbot, discord_id: int) -> bool:
     except Exception as ex:
         bot.logger.error("Could not update profile for %d: %s", discord_id, ex)
         return False
+
 
 async def register_user() -> bool:
     return True

@@ -8,6 +8,7 @@ from .embeds import vendor_embed
 from .item_processing import fetch_vendor_sales
 from .shaders import get_missing_shaders
 
+
 async def vendor_rotations(bot: Ehrenbot, logger: Logger, vendor_hash: int):
     channel: discord.TextChannel = discord.utils.get(
         bot.get_all_channels(), name="vendor-sales"

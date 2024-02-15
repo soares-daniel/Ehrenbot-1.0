@@ -5,6 +5,7 @@ import discord
 from ehrenbot import Ehrenbot
 from .embeds import create_emoji_from_entry
 
+
 async def get_missing_shaders(bot: Ehrenbot, logger: Logger, discord_id: int) -> bool:
     try:
         member = bot.get_user(discord_id)

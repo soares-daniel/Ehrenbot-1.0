@@ -37,13 +37,13 @@ class Rotations(commands.Cog):
     async def rotation_banshee_ada(self, ctx: discord.ApplicationContext):
         """Start Banshee-44 rotation manually."""
         await ctx.respond("Banshee-44 rotation started.", delete_after=2)
-        await vendor_rotations(self.bot, self.logger, 672118013) # Banshee-44
+        await vendor_rotations(self.bot, self.logger, 672118013)  # Banshee-44
 
     @rotation.command(name="ada", description="Start Ada-1 rotation manually.")
     async def rotation_ada(self, ctx: discord.ApplicationContext):
         """Start Ada-1 rotation manually."""
         await ctx.respond("Ada-1 rotation started.", delete_after=2)
-        await vendor_rotations(self.bot, self.logger, 350061650) # Ada-1
+        await vendor_rotations(self.bot, self.logger, 350061650)  # Ada-1
 
     @rotation.command(name="xur", description="Start Xur rotation manually.")
     async def rotation_xur(self, ctx: discord.ApplicationContext):
@@ -132,8 +132,8 @@ class Rotations(commands.Cog):
 
     @tasks.loop(time=get_reset_time())
     async def daily_vendor_rotation(self):
-        await vendor_rotations(self.bot, self.logger, 672118013) # Banshee-44
-        await vendor_rotations(self.bot, self.logger, 350061650) # Ada-1
+        await vendor_rotations(self.bot, self.logger, 672118013)  # Banshee-44
+        await vendor_rotations(self.bot, self.logger, 350061650)  # Ada-1
         await self.xur()
 
     @daily_vendor_rotation.before_loop

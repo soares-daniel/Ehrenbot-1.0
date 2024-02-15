@@ -15,7 +15,7 @@ class Owner(commands.Cog):
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(self.bot.file_handler)
         self.logger.addHandler(self.bot.stream_handler)
-
+        
     owner = discord.SlashCommandGroup(name="owner", description="Owner commands.")
 
     def get_cogs(self) -> list:

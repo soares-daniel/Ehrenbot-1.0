@@ -2,6 +2,7 @@ import subprocess
 import os
 from settings import MONGODB_HOST, MONGODB_OPTIONS, MONGODB_PASS, MONGODB_USER
 
+
 def export_data_from_cloud(uri, output_directory):
     try:
         subprocess.run(["mongodump", "--uri", uri, "--out", output_directory])
@@ -9,9 +10,12 @@ def export_data_from_cloud(uri, output_directory):
     except Exception as ex:
         print(f"An error occurred during export: {ex}")
 
+
 if __name__ == "__main__":
     # URI of your MongoDB cloud instance
-    CLOUD_URI = f"mongodb://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
+    CLOUD_URI = (
+        f"mongodb://{MONGODB_USER}:{MONGODB_PASS}@{MONGODB_HOST}/?{MONGODB_OPTIONS}"
+    )
     # Output directory for exported data
     OUTPUT_DIR = "mongodb_exported_data"
 

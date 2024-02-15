@@ -10,7 +10,13 @@ import zipfile
 
 from pymongo.mongo_client import MongoClient
 
-from settings import MONGODB_PREFIX, MONGODB_HOST, MONGODB_OPTIONS, MONGODB_PASS, MONGODB_USER
+from settings import (
+    MONGODB_PREFIX,
+    MONGODB_HOST,
+    MONGODB_OPTIONS,
+    MONGODB_PASS,
+    MONGODB_USER,
+)
 
 # %% Settings
 #################

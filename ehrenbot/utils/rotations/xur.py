@@ -1,4 +1,3 @@
-
 import datetime
 import logging
 
@@ -99,19 +98,28 @@ async def xur_embed(bot: Ehrenbot) -> discord.Embed:
     return embed
 
 
-async def exotic_item_embed_field(bot: Ehrenbot, vendor_hash: int, item_type: str) -> str:
-    daily_rotation = bot.database["destiny_rotation"].find_one({"vendor_hash": vendor_hash})
+async def exotic_item_embed_field(
+    bot: Ehrenbot, vendor_hash: int, item_type: str
+) -> str:
+    daily_rotation = bot.database["destiny_rotation"].find_one(
+        {"vendor_hash": vendor_hash}
+    )
     items = daily_rotation[item_type]
 
     exotic_items = [
-        (items[item]["definition"]["displayProperties"]["name"], items[item]["definition"])
+        (
+            items[item]["definition"]["displayProperties"]["name"],
+            items[item]["definition"],
+        )
         for item in items
         if items[item]["definition"]["inventory"]["tierType"] == 6
     ]
 
     exotic_weapon_strings = []
     for item_name, item_definition in exotic_items:
-        emoji = await create_emoji_from_entry(bot=bot, logger=bot.logger, item_definition=item_definition)
+        emoji = await create_emoji_from_entry(
+            bot=bot, logger=bot.logger, item_definition=item_definition
+        )
         exotic_weapon_strings.append(f"{emoji} {item_name}")
 
     return "\n".join(exotic_weapon_strings)
