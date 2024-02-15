@@ -4,6 +4,7 @@
 .vscode
 .env
 .env.debug
+poetry.lock
 
 # Cache files
 __pycache__
