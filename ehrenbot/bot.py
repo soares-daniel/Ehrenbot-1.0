@@ -4,7 +4,6 @@ from datetime import time, timezone
 from logging import handlers
 
 from aiohttp import web
-from aiohttp.http_exceptions import BadStatusLine
 
 from destipy.destiny_client import DestinyClient
 from discord import Activity, ActivityType, DiscordException, Intents
