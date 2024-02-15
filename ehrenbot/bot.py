@@ -9,7 +9,6 @@ from aiohttp.http_exceptions import BadStatusLine
 from destipy.destiny_client import DestinyClient
 from discord import Activity, ActivityType, DiscordException, Intents
 from discord.ext import commands
-from discord.ext.i18n import Agent
 from pymongo import MongoClient
 
 from settings import (
@@ -25,6 +24,7 @@ from settings import (
     REDIRECT_URI,
     WEB_SERVER_PORT,
 )
+
 
 class Ehrenbot(commands.Bot):
     """The Ehrenbot Discord bot."""
@@ -62,8 +62,6 @@ class Ehrenbot(commands.Bot):
         self.destiny_client = DestinyClient(
             BUNGIE_API_KEY, BUNGIE_CLIENT_ID, BUNGIE_CLIENT_SECRET, REDIRECT_URI
         )
-        # Translator
-        self.agent = Agent(translate_messages=True)
 
         # Misc
         self.DEBUG = DEBUG
@@ -82,7 +80,6 @@ class Ehrenbot(commands.Bot):
             hour=17, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
         )
         self.vendor_guild_id = 0
-        self.mapped_states = {}  # state -> discord_id
 
     async def on_ready(self) -> None:
         print("------")
@@ -107,20 +104,24 @@ class Ehrenbot(commands.Bot):
     async def handle_request(self, request: web.Request) -> web.Response:
         """Handle a request to the web server."""
 
+        print("handle_request called.")
         try:
             code = request.query["code"]
             state = request.query["state"]
-            discord_id = self.mapped_states[state]
-        except KeyError:
-            return web.Response(text="Missing required query parameters.")
-        except BadStatusLine:
-            return web.Response(text="Bad status line.")
+            db_state = self.database["states"].find_one({"state": state})
+            if not db_state:
+                return web.Response(text="Invalid state.")
+            discord_id = db_state["discord_id"]
+        except Exception as e:
+            self.logger.debug(f"Failed to fetch code and state: {e}")
+            return web.Response(text="Action failed. Check Logs")
+
 
         # Fetch the token and save to the database
         try:
             token = await self.destiny_client.oauth.fetch_token(code, state)
         except Exception as e:
-            print(f"Failed to fetch token: {e}")
+            self.logger.error(f"Failed to fetch token: {e}")
             return web.Response(text="Failed to fetch token.")
 
         #  TODO: FIX fetch_token to raise exception if no token
@@ -136,7 +137,7 @@ class Ehrenbot(commands.Bot):
         self.database["destiny_tokens"].insert_one(entry)
 
         # Remove state form mapped_states
-        del self.mapped_states[state]
+        self.database["states"].delete_one({"state": state})
 
         # Serve HTML with JavaScript to close the tab
         html_content = """
@@ -161,9 +162,9 @@ class Ehrenbot(commands.Bot):
     async def web_server(self) -> None:
         """Start the web server."""
         app = web.Application()
-        app.router.add_get('/', self.handle_request)
+        app.router.add_get("/", self.handle_request)
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', WEB_SERVER_PORT)
+        site = web.TCPSite(runner, "0.0.0.0", WEB_SERVER_PORT)
         await site.start()
         print(f"Web server started on port {WEB_SERVER_PORT}.")

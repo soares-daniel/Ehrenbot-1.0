@@ -56,7 +56,7 @@ class Registration(commands.Cog):
         parts = urlparse(url)
         query_dict = parse_qs(parts.query)
         state = query_dict["state"][0]
-        self.bot.mapped_states[state] = ctx.author.id
+        self.bot.database["states"].insert_one({"state": state, "discord_id": ctx.author.id})
         await ctx.author.send(url)
 
         # Check during 300 seconds if the token has been stored in the database
@@ -70,7 +70,9 @@ class Registration(commands.Cog):
                     break
 
         if token is None:
-            await ctx.author.send("The token could not be found in the database. Please try again.")
+            await ctx.author.send(
+                "The token could not be found in the database. Please try again."
+            )
             return
 
         if await setup_profile(self.bot, ctx.author.id, token["membership_id"]):
