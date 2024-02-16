@@ -79,7 +79,9 @@ class PogoEventNotification(discord.Embed):
             description=event.heading,
             url=event.link,
             color=event.color,
+            timestamp=datetime.now(pytz.timezone("Europe/Berlin")),
         )
+
         self.set_footer(text=event.footer)
         self.set_image(url=event.image)
         if event.thumbnail:
@@ -110,6 +112,7 @@ class PogoUpComingEvents(discord.Embed):
             title="Upcoming Events",
             color=0x708090,
             url="https://leekduck.com/events/",
+            timestamp=datetime.now(pytz.timezone("Europe/Berlin")),
         )
         self.set_thumbnail(
             url="https://assets.materialup.com/uploads/16628596-91da-45c6-8bd3-f514a2d5a58b/preview.jpg"
