@@ -73,6 +73,7 @@ class Ehrenbot(commands.Bot):
         else:
             self.GUILD_ID = self.MAIN_GUILD_ID
             self.destiny_invite_code = "tHQWSPuFVW"
+            self.pogo_invite_code = "s32JhvYqaC"
         self.ADMIN_DISCORD_ID = 279725513323315200
         self.BUNGIE_BASE_URL = "https://www.bungie.net/"
         self.RESET_TIME = time(
