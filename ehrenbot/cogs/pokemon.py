@@ -208,7 +208,7 @@ class Pokemon(commands.Cog):
                     pass
             upcoming_embed = PogoUpComingEvents(upcoming_events, self.event_dates)
             active_event_embeds = [
-                PogoEventNotification(event, event_date)
+                PogoEventNotification(event, self.event_dates[event.eventID])
                 for event in active_events
             ]
             for channel in channels:
