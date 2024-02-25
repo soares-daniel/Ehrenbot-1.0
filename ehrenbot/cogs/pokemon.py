@@ -57,7 +57,6 @@ class PogoEventResponse(BaseModel):
     extraData: Optional[dict] = {} # TODO: Add model for extraData
 
 
-
 class PogoEventEmbedData(PogoEventResponse):
     model_config = ConfigDict(extra="ignore")
     notes: list[str]
@@ -71,6 +70,9 @@ class PogoEventDates(BaseModel):
     start: datetime
     end: datetime
 
+
+# list of every hour in a day
+when = [datetime.time(hour=x) for x in range(24)]
 
 class PogoEventNotification(discord.Embed):
     def __init__(self, event: PogoEventEmbedData, event_dates: PogoEventDates):
@@ -158,7 +160,7 @@ class Pokemon(commands.Cog):
             self.event_dates.append(PogoEventDates(eventId=event.eventID, start=event_start, end=event_end))
         self.event_dates.sort(key=lambda x: x.start)
 
-    @tasks.loop(minutes=30)
+    @tasks.loop(time=when)
     async def fetch_events(self):#
         async with aiohttp.ClientSession() as session:
             async with session.get("https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json") as response:
