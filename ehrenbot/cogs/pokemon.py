@@ -1,16 +1,16 @@
-import logging
 import json
-import pytz
+import logging
 from datetime import datetime
 from typing import Optional
-from dateutil.parser import parse
+
 import aiohttp
 import discord
+import pytz
+from dateutil.parser import parse
 from discord.ext import commands, tasks
 from pydantic import BaseModel, ConfigDict
 
 from ehrenbot.bot import Ehrenbot
-
 
 event_colors = {
     "community-day": 0xFFD700,
@@ -54,7 +54,7 @@ class PogoEventResponse(BaseModel):
     image: str
     start: str
     end: str
-    extraData: Optional[dict] = {} # TODO: Add model for extraData
+    extraData: Optional[dict] = {}  # TODO: Add model for extraData
 
 
 class PogoEventEmbedData(PogoEventResponse):
@@ -72,7 +72,8 @@ class PogoEventDates(BaseModel):
 
 
 # list of every hour in a day
-when = [datetime.time(hour=x) for x in range(24)]
+when = [datetime.time(x, 0) for x in range(24)]
+
 
 class PogoEventNotification(discord.Embed):
     def __init__(self, event: PogoEventEmbedData, event_dates: PogoEventDates):
@@ -90,12 +91,12 @@ class PogoEventNotification(discord.Embed):
             self.set_thumbnail(url=event.thumbnail)
         self.add_field(
             name="Start",
-            value=event_dates.start.strftime('%d.%m.%Y %H:%M'),
+            value=event_dates.start.strftime("%d.%m.%Y %H:%M"),
             inline=True,
         )
         self.add_field(
             name="End",
-            value=event_dates.end.strftime('%d.%m.%Y %H:%M'),
+            value=event_dates.end.strftime("%d.%m.%Y %H:%M"),
             inline=True,
         )
         if event.notes:
@@ -121,7 +122,9 @@ class PogoUpComingEvents(discord.Embed):
         )
         self.set_footer(text="From Leekduck via ScrapedDuck")
         for event in events:
-            event_date = next((date for date in event_dates if date.eventId == event.eventID), None)
+            event_date = next(
+                (date for date in event_dates if date.eventId == event.eventID), None
+            )
             if event_date:
                 self.add_field(
                     name=event.name,
@@ -157,13 +160,17 @@ class Pokemon(commands.Cog):
             # Parse and convert to Berlin's timezone, then make naive
             event_start = parse(event.start).astimezone(berlin_tz).replace(tzinfo=None)
             event_end = parse(event.end).astimezone(berlin_tz).replace(tzinfo=None)
-            self.event_dates.append(PogoEventDates(eventId=event.eventID, start=event_start, end=event_end))
+            self.event_dates.append(
+                PogoEventDates(eventId=event.eventID, start=event_start, end=event_end)
+            )
         self.event_dates.sort(key=lambda x: x.start)
 
     @tasks.loop(time=when)
-    async def fetch_events(self):#
+    async def fetch_events(self):  #
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json") as response:
+            async with session.get(
+                "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json"
+            ) as response:
                 if response.status == 200:
                     text = await response.text()
                     try:
@@ -180,7 +187,9 @@ class Pokemon(commands.Cog):
                     except json.JSONDecodeError as e:
                         self.logger.error(f"Failed to parse JSON: {e}")
                 else:
-                    self.logger.error(f"Failed to fetch Pokemon GO events with status: {response.status}")
+                    self.logger.error(
+                        f"Failed to fetch Pokemon GO events with status: {response.status}"
+                    )
         await self.gather_event_dates()
         await self.event_notifications()
 
@@ -198,7 +207,14 @@ class Pokemon(commands.Cog):
         upcoming_events: list[PogoEventEmbedData] = []
         try:
             for event_date in self.event_dates:  # Sorted
-                event = next((event for event in self.events if event.eventID == event_date.eventId), None)
+                event = next(
+                    (
+                        event
+                        for event in self.events
+                        if event.eventID == event_date.eventId
+                    ),
+                    None,
+                )
                 if event is None:
                     continue
                 if event_date.start > current_time:
@@ -223,7 +239,9 @@ class Pokemon(commands.Cog):
                             await message.edit(embed=upcoming_embed)
                             has_upcoming = True
                         else:
-                            if embed.title not in [event.name for event in active_events]:
+                            if embed.title not in [
+                                event.name for event in active_events
+                            ]:
                                 await message.delete()
                                 active_events.remove(
                                     event
