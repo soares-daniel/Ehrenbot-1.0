@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, time
 from typing import Optional
 
 import aiohttp
@@ -72,7 +72,7 @@ class PogoEventDates(BaseModel):
 
 
 # list of every hour in a day
-when = [datetime.time(x, 0) for x in range(24)]
+when = [time(hour=x, minute=0) for x in range(24)]
 
 
 class PogoEventNotification(discord.Embed):
@@ -148,10 +148,14 @@ class Pokemon(commands.Cog):
                 "Additional daily passes can only be obtained during the Raid Day hours for the specific Pokemon."
             ]
         }
-        self.fetch_events.start()
+        self.do_fetch_events.start()
 
     def cog_unload(self):
-        self.fetch_events.cancel()
+        self.do_fetch_events.cancel()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        await self.fetch_events()
 
     async def gather_event_dates(self):
         berlin_tz = pytz.timezone("Europe/Berlin")
@@ -166,7 +170,14 @@ class Pokemon(commands.Cog):
         self.event_dates.sort(key=lambda x: x.start)
 
     @tasks.loop(time=when)
-    async def fetch_events(self):  #
+    async def do_fetch_events(self):
+        await self.fetch_events()
+
+    @do_fetch_events.before_loop
+    async def before_fetch_events(self):
+        await self.bot.wait_until_ready()
+
+    async def fetch_events(self):
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json"
@@ -192,10 +203,6 @@ class Pokemon(commands.Cog):
                     )
         await self.gather_event_dates()
         await self.event_notifications()
-
-    @fetch_events.before_loop
-    async def before_fetch_events(self):
-        await self.bot.wait_until_ready()
 
     async def event_notifications(self):
         current_time = datetime.now(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
