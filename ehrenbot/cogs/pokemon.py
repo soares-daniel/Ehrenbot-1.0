@@ -12,7 +12,6 @@ from pydantic import BaseModel, ConfigDict
 
 from ehrenbot.bot import Ehrenbot
 
-
 event_colors = {
     "community-day": 0xFFD700,
     "event": 0x708090,
@@ -83,7 +82,7 @@ class PogoEventNotification(discord.Embed):
             description=event.heading,
             url=event.link,
             color=event.color,
-            timestamp=datetime.now(pytz.timezone("Europe/Lisbon")),
+            timestamp=datetime.now(pytz.timezone("Europe/Berlin")),
         )
 
         self.set_footer(text=event.footer)
@@ -203,10 +202,22 @@ class Pokemon(commands.Cog):
                         f"Failed to fetch Pokemon GO events with status: {response.status}"
                     )
         await self.gather_event_dates()
-        await self.event_notifications()
+
+        utc_zone = datetime.timezone('UTC')
+        local_zone = datetime.timezone('Europe/Berlin')
+
+        # Convert event start and end times from UTC to Europe/Berlin time zone
+        event_start_local = self.event_dates.start.replace(tzinfo=utc_zone).astimezone(local_zone)
+        event_end_local = self.event_dates.end.replace(tzinfo=utc_zone).astimezone(local_zone)
+
+        # Now format these for display
+        start_str = event_start_local.strftime("%d.%m.%Y %H:%M")
+        end_str = event_end_local.strftime("%d.%m.%Y %H:%M")
+        self.logger.info(f"Event start: {start_str}, Event end: {end_str}")
+        #await self.event_notifications()
 
     async def event_notifications(self):
-        current_time = datetime.now(pytz.timezone("Europe/Lisbon")).replace(tzinfo=None)
+        current_time = datetime.now(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
         channel_entries = self.bot.database["channels"].find({"type": "pogo_events"})
         channels = [
             self.bot.get_channel(entry["channel_id"]) for entry in channel_entries
