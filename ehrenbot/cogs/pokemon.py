@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ehrenbot.bot import Ehrenbot
 
+
 event_colors = {
     "community-day": 0xFFD700,
     "event": 0x708090,
