@@ -83,7 +83,7 @@ class PogoEventNotification(discord.Embed):
             description=event.heading,
             url=event.link,
             color=event.color,
-            timestamp=datetime.now(pytz.timezone("Europe/Berlin")),
+            timestamp=datetime.now(pytz.timezone("Europe/Lisbon")),
         )
 
         self.set_footer(text=event.footer)
@@ -206,7 +206,7 @@ class Pokemon(commands.Cog):
         await self.event_notifications()
 
     async def event_notifications(self):
-        current_time = datetime.now(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
+        current_time = datetime.now(pytz.timezone("Europe/Lisbon")).replace(tzinfo=None)
         channel_entries = self.bot.database["channels"].find({"type": "pogo_events"})
         channels = [
             self.bot.get_channel(entry["channel_id"]) for entry in channel_entries
