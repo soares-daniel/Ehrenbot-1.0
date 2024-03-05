@@ -203,8 +203,8 @@ class Pokemon(commands.Cog):
                     )
         await self.gather_event_dates()
 
-        utc_zone = datetime.timezone('UTC')
-        local_zone = datetime.timezone('Europe/Berlin')
+        utc_zone = pytz.timezone('UTC')
+        local_zone = pytz.timezone('Europe/Berlin')
 
         # Convert event start and end times from UTC to Europe/Berlin time zone
         event_start_local = self.event_dates.start.replace(tzinfo=utc_zone).astimezone(local_zone)
