@@ -158,12 +158,24 @@ class Pokemon(commands.Cog):
         await self.fetch_events()
 
     async def gather_event_dates(self):
-        berlin_tz = pytz.timezone("Europe/Berlin")
         self.event_dates = []
         for event in self.events:
-            # Parse and convert to Berlin's timezone, then make naive
-            event_start = parse(event.start).astimezone(berlin_tz).replace(tzinfo=None)
-            event_end = parse(event.end).astimezone(berlin_tz).replace(tzinfo=None)
+            # Directly parse the start and end times without converting them to a specific timezone
+            event_start = parse(event.start)
+            event_end = parse(event.end)
+
+            # Ensure all datetime objects are offset-naive by removing timezone information
+            event_start = (
+                event_start.replace(tzinfo=None)
+                if event_start.tzinfo is not None
+                else event_start
+            )
+            event_end = (
+                event_end.replace(tzinfo=None)
+                if event_end.tzinfo is not None
+                else event_end
+            )
+
             self.event_dates.append(
                 PogoEventDates(eventId=event.eventID, start=event_start, end=event_end)
             )
@@ -202,19 +214,7 @@ class Pokemon(commands.Cog):
                         f"Failed to fetch Pokemon GO events with status: {response.status}"
                     )
         await self.gather_event_dates()
-
-        utc_zone = pytz.timezone('UTC')
-        local_zone = pytz.timezone('Europe/Berlin')
-
-        # Convert event start and end times from UTC to Europe/Berlin time zone
-        event_start_local = self.event_dates.start.replace(tzinfo=utc_zone).astimezone(local_zone)
-        event_end_local = self.event_dates.end.replace(tzinfo=utc_zone).astimezone(local_zone)
-
-        # Now format these for display
-        start_str = event_start_local.strftime("%d.%m.%Y %H:%M")
-        end_str = event_end_local.strftime("%d.%m.%Y %H:%M")
-        self.logger.info(f"Event start: {start_str}, Event end: {end_str}")
-        #await self.event_notifications()
+        await self.event_notifications()
 
     async def event_notifications(self):
         current_time = datetime.now(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
