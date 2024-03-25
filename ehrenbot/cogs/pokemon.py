@@ -74,39 +74,6 @@ class PogoEventDates(BaseModel):
 # list of every hour in a day
 when = [time(hour=x, minute=0) for x in range(24)]
 
-
-class PogoEventNotification(discord.Embed):
-    def __init__(self, event: PogoEventEmbedData, event_dates: PogoEventDates):
-        super().__init__(
-            title=event.name,
-            description=event.heading,
-            url=event.link,
-            color=event.color,
-            timestamp=datetime.now(pytz.timezone("Europe/Berlin")),
-        )
-
-        self.set_footer(text=event.footer)
-        self.set_image(url=event.image)
-        if event.thumbnail:
-            self.set_thumbnail(url=event.thumbnail)
-        self.add_field(
-            name="Start",
-            value=event_dates.start.strftime("%d.%m.%Y %H:%M"),
-            inline=True,
-        )
-        self.add_field(
-            name="End",
-            value=event_dates.end.strftime("%d.%m.%Y %H:%M"),
-            inline=True,
-        )
-        if event.notes:
-            self.add_field(
-                name="Notes",
-                value="\n".join(event.notes),
-                inline=False,
-            )
-
-
 class PogoUpComingEvents(discord.Embed):
     def __init__(
         self, events: list[PogoEventEmbedData], event_dates: list[PogoEventDates]
@@ -244,13 +211,8 @@ class Pokemon(commands.Cog):
                 elif current_time >= event_date.end:
                     pass
             upcoming_embed = PogoUpComingEvents(upcoming_events, self.event_dates)
-            active_event_embeds = [
-                PogoEventNotification(active_events[i], self.event_dates[i])
-                for i in range(len(active_events))
-            ]
             for channel in channels:
                 has_upcoming = False
-                currently_in_channel = []
                 async for message in channel.history(limit=100):
                     if message.embeds:
                         embed = message.embeds[0]
@@ -258,21 +220,9 @@ class Pokemon(commands.Cog):
                             await message.edit(embed=upcoming_embed)
                             has_upcoming = True
                         else:
-                            if embed.title not in [
-                                event.name for event in active_events
-                            ]:
-                                await message.delete()
-                                active_events.remove(
-                                    event
-                                    for event in active_events
-                                    if event.name == embed.title
-                                )
-                            currently_in_channel.append(embed.title)
+                            continue
                 if not has_upcoming:
                     await channel.send(embed=upcoming_embed)
-                for event in active_event_embeds:
-                    if event.title not in currently_in_channel:
-                        await channel.send(embed=event)
         except Exception as e:
             self.logger.error(f"Failed to send event notifications: {e}")
 
