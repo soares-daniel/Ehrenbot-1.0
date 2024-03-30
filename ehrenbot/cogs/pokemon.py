@@ -1,16 +1,16 @@
 import json
 import logging
 from datetime import datetime, time
-from typing import Optional
 
 import aiohttp
 import discord
 import pytz
 from dateutil.parser import parse
 from discord.ext import commands, tasks
-from pydantic import BaseModel, ConfigDict
 
 from ehrenbot.bot import Ehrenbot
+from ehrenbot.types import PogoEventDates, PogoEventEmbedData, PogoEventResponse
+from ehrenbot.embeds.pogo_upcoming_events import PogoUpComingEvents
 
 event_colors = {
     "community-day": 0xFFD700,
@@ -43,62 +43,8 @@ event_colors = {
     "elite-raids": 0x000000,
 }
 
-
-class PogoEventResponse(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    eventID: str
-    name: str
-    eventType: str
-    heading: str
-    link: str
-    image: str
-    start: str
-    end: str
-    extraData: Optional[dict] = {}  # TODO: Add model for extraData
-
-
-class PogoEventEmbedData(PogoEventResponse):
-    model_config = ConfigDict(extra="ignore")
-    notes: list[str]
-    color: int = 0x708090
-    footer: str = "From Leekduck via ScrapedDuck"
-    thumbnail: Optional[str] = None
-
-
-class PogoEventDates(BaseModel):
-    eventId: str
-    start: datetime
-    end: datetime
-
-
 # list of every hour in a day
 when = [time(hour=x, minute=0) for x in range(24)]
-
-class PogoUpComingEvents(discord.Embed):
-    def __init__(
-        self, events: list[PogoEventEmbedData], event_dates: list[PogoEventDates]
-    ):
-        super().__init__(
-            title="Upcoming Events",
-            color=0x708090,
-            url="https://leekduck.com/events/",
-            timestamp=datetime.now(pytz.timezone("Europe/Berlin")),
-        )
-        self.set_thumbnail(
-            url="https://assets.materialup.com/uploads/16628596-91da-45c6-8bd3-f514a2d5a58b/preview.jpg"
-        )
-        self.set_footer(text="From Leekduck via ScrapedDuck")
-        for event in events:
-            event_date = next(
-                (date for date in event_dates if date.eventId == event.eventID), None
-            )
-            if event_date:
-                self.add_field(
-                    name=event.name,
-                    value=f"{event_date.start.strftime('%d.%m.%Y %H:%M')} - {event_date.end.strftime('%d.%m.%Y %H:%M')} [Link]({event.link})",
-                    inline=False,
-                )
-
 
 class Pokemon(commands.Cog):
     def __init__(self, bot):
