@@ -59,7 +59,7 @@ class PokeBattler(commands.Cog):
                     article_url = article.find('a')['href'] if article.find('a') else 'No URL'
                     self.articles.append(PokeBattlerArticle(title=title, url=article_url, image=image, published=datetime.timestamp(today)))
             elif response.status == 404:
-                self.logger.error(f"No articles found for {today.year}/{month}/{day}")
+                self.logger.debug(f"No articles found for {today.year}/{month}/{day}")
             else:
                 self.logger.error(f"Failed to fetch PokeBattler articles: {response.status}")
 
